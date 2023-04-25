@@ -1,0 +1,26 @@
+{
+  "organisms": [
+    {
+      "name": "Rat",
+      "age" : 1
+    },
+    {
+      "name": "Rat",
+      "age" : 1
+    },
+    {
+      "name": "Rat",
+      "age" : 1
+    }
+  ],
+  "vegetation": [
+    {
+      "name": "Corn",
+      "age": 1
+    },
+    {
+      "name": "Corn",
+      "age": 1
+    }
+  ]
+}
