@@ -28,4 +28,4 @@ class SimulationDataPersistor(object):
 
         # Persist results
         with open(output_path, "w") as of:
-            json.dump(output, of)
+            json.dump(output, of, indent=2, separators=(',', ': '))
