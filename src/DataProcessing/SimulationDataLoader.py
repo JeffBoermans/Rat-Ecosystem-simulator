@@ -3,8 +3,8 @@ import json
 from ..Logic.DataStore import DataStore
 from ..Logic.Entities.organism import Organism
 from ..Logic.Entities.vegetation import Vegetation
+from .exceptions import InputException, MissingInputKey
 
-from src.DataProcessing.ExceptionHandler import InputException
 
 class SimulationDataLoader(object):
     """This class loads input information into a simulation's datastore.
@@ -21,6 +21,11 @@ class SimulationDataLoader(object):
         data = json.load(f)
 
         # Input Validation
+        required_keys = ['organisms', 'vegetation', 'food-chain-preys']
+        missing_key: str | None = next((req_key for req_key in required_keys if req_key not in data), None)
+        if missing_key is not None:
+            raise MissingInputKey(f"{input_path}: A required top-level key is missing from the session file: {missing_key}")
+
         food_chain_preys = data["food-chain-preys"]
 
         # All keys are organisms, All non-keys are vegetation
