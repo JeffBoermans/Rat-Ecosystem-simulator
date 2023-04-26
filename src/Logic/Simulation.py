@@ -1,6 +1,6 @@
 from .DataStore import DataStore
-from ..Output.SimulationDataPersistor import SimulationDataPersistor
-from ..Output.SimulationDataLoader import SimulationDataLoader
+from ..DataProcessing.SimulationDataPersistor import SimulationDataPersistor
+from ..DataProcessing.SimulationDataLoader import SimulationDataLoader
 
 
 class Simulation(object):
@@ -9,7 +9,6 @@ class Simulation(object):
 
     def run(self):
         """Run the simulation.
-
         This is the entry point of the simulation.
         """
         self._load()

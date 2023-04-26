@@ -2,7 +2,7 @@ from src.Logic.Simulation import Simulation
 
 
 if __name__ == '__main__':
-    new_sim: Simulation = Simulation("Input/session_files/session1.json")
+    new_sim: Simulation = Simulation("Input/SessionFiles/session1.json")
     print("Starting simulation ...")
     new_sim.run()
     print("Persisting results ...")
