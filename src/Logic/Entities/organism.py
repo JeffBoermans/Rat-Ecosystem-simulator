@@ -1,6 +1,6 @@
-class Organism:
+from src.Logic.Entities.entity import Entity
+
+class Organism(Entity):
     def __init__(self, e_name: str, e_age: int, e_id: int):
-        self.name: str = e_name
-        self.age: int  = e_age  #TODO: Don't work with age?
-        self.id: int = e_id
+        super().__init__(e_name, e_age, e_id)
 
