@@ -1,6 +1,6 @@
 # COMPBIO-NACO
 
-Project for Computational Biology (2022-2023), 3th Bachelor Computer Science at the University of Antwerp
+Project for Computational Biology (2022-2023), 3rd Bachelor Computer Science at the University of Antwerp
 
 # Running the Simulation
 
