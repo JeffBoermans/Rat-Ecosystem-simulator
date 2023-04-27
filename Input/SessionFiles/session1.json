@@ -1,4 +1,9 @@
 {
+  "food-chain-preys": {
+    "Rat": [
+      "Corn", "Wheat"
+    ]
+  },
   "organisms": [
     {
       "name": "Rat",
@@ -19,7 +24,7 @@
       "age": 1
     },
     {
-      "name": "Corn",
+      "name": "Wheat",
       "age": 1
     }
   ]
