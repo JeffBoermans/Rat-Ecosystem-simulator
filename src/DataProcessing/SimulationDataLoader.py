@@ -30,26 +30,30 @@ class SimulationDataLoader(object):
 
         # All keys are organisms, All non-keys are vegetation
         organisms = [entity_name for entity_name in food_chain_preys]
-        vegetation = []
+        vegetations = []
 
         # Populate Data Store
         e_id = 0
         for organism in data['organisms']:
             if organism["name"] in organisms:
                 organisms.remove(organism["name"])
+            for item in food_chain_preys[organism["name"]]:
+                if item not in vegetations:
+                    vegetations.append(item)
             datastore.organisms.append(Organism(organism["name"], organism["age"], e_id))
             e_id += 1
         v_id = 0
         for vegetation in data['vegetation']:
             if vegetation["name"] in organisms:
                 raise InputException(f"{input_path}: Vegetation detected as prey in the food-chain!")
+            if vegetation["name"] in vegetations:
+                vegetations.remove(vegetation["name"])
             datastore.vegetation.append(Vegetation(vegetation["name"], vegetation["age"], v_id))
             v_id += 1
         if len(organisms) != 0:
             raise InputException(f"{input_path}: Uninitialized organism detected in the food-chain!")
+        if len(vegetations) != 0:
+            raise InputException(f"{input_path}: Uninitialized vegetation detected in food-chain!")
         datastore.foodChain = food_chain_preys
+        a = 4
         #TODO: Can an organism be its own prey?
-
-
-
-
