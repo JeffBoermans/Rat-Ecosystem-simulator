@@ -35,11 +35,20 @@ class SimulationDataLoader(object):
         # Populate Data Store
         e_id = 0
         for organism in data['organisms']:
-            if organism["name"] in organisms:
-                organisms.remove(organism["name"])
-            for item in food_chain_preys[organism["name"]]:
-                if item not in vegetations:
-                    vegetations.append(item)
+            name = organism["name"]
+            if name in organisms:
+                organisms.remove(name)
+            try:
+                for item in food_chain_preys[name]:
+                    if item not in vegetations:
+                        vegetations.append(item)
+                assert isinstance(name, str)
+                assert isinstance(organism["age"], int)
+            except KeyError:
+                raise InputException(f"{input_path}: Wrong typing used when specifying an organism!")
+            except AssertionError:
+                raise InputException(f"{input_path}: '{organism['name']}' was not found present in the food-chain!")
+
             datastore.organisms.append(Organism(organism["name"], organism["age"], e_id))
             e_id += 1
         v_id = 0
@@ -55,5 +64,3 @@ class SimulationDataLoader(object):
         if len(vegetations) != 0:
             raise InputException(f"{input_path}: Uninitialized vegetation detected in food-chain!")
         datastore.foodChain = food_chain_preys
-        a = 4
-        #TODO: Can an organism be its own prey?
