@@ -1,4 +1,4 @@
-from src.Logic.Simulation import Simulation
+from src import Simulation
 
 def main():
     inputfile: str = "Input/SessionFiles/session1.json"
