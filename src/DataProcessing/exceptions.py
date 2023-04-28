@@ -10,5 +10,9 @@ class MissingInputKey(InputException):
     """
     pass
 
+class WrongInputFile(InputException):
+    """The input file is not in the .json format.
+    """
+    pass
 
 
