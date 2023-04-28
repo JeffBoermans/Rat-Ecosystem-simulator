@@ -4,18 +4,31 @@
       "Corn", "Wheat"
     ]
   },
+  "organism-characteristics": [
+    {
+      "Rat": {
+        "sexual-maturity-weeks": 7,
+        "breeding-age-weeks": 8,
+        "life-span-months": [30, 36],
+        "menopause-age-months": [15, 18]
+      }
+    }
+  ],
   "organisms": [
     {
       "name": "Rat",
-      "age" : 1
+      "age" : 1,
+      "sex" : "f"
     },
     {
       "name": "Rat",
-      "age" : 1
+      "age" : 1,
+      "sex" : "f"
     },
     {
       "name": "Rat",
-      "age" : 1
+      "age" : 1,
+      "sex" : "f"
     }
   ],
   "vegetation": [
