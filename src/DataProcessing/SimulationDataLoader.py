@@ -3,7 +3,7 @@ import json
 from ..Logic.DataStore import DataStore
 from ..Logic.Entities.organism import Organism, OrganismInfo
 from ..Logic.Entities.vegetation import Vegetation
-from .exceptions import InputException, MissingInputKey
+from .exceptions import InputException, MissingInputKey, WrongInputFile
 
 
 class SimulationDataLoader(object):
@@ -16,11 +16,16 @@ class SimulationDataLoader(object):
         :param input_path: The path to the input file
         """
 
+        # Input Validation; check if the input file is a .json file
+        if not input_path.lower().endswith(".json"):
+            raise WrongInputFile(f"The provided input file '{input_path}' is not a .json file.")
+
+
         # Setup
         f = open(input_path, "r")
         data = json.load(f)
 
-        # Input Validation
+        # Input Validation; check if the input file is valid
         required_keys = ['organisms', 'vegetation', 'food-chain-preys']
         missing_key: str | None = next((req_key for req_key in required_keys if req_key not in data), None)
         if missing_key is not None:
