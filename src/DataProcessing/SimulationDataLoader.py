@@ -9,6 +9,7 @@ from .exceptions import InputException, MissingInputKey, WrongInputFile
 class SimulationDataLoader(object):
     """This class loads input information into a simulation's datastore.
     """
+
     def load(self, datastore: DataStore, input_path: str) -> None:
         """Populate the datastore with the contents of the designated session file.
 
@@ -33,6 +34,7 @@ class SimulationDataLoader(object):
 
         food_chain_preys = data["food-chain-preys"]
         organism_info = data["organism-characteristics"]
+        data_organism_info = None
 
         # All keys are organisms, All non-keys are vegetation
         organisms = [entity_name for entity_name in food_chain_preys]
@@ -45,6 +47,13 @@ class SimulationDataLoader(object):
             if name in organisms:
                 organisms.remove(name)
             try:
+                if data_organism_info is None:
+                    data_organism_info = OrganismInfo(
+                        o_m = 8 * int(organism_info[0][name]["sexual-maturity-weeks"]),
+                        o_b = 8 * int(organism_info[0][name]["breeding-age-weeks"]),
+                        o_ls = organism_info[0][name]["life-span-months"],
+                        o_mpa = organism_info[0][name]["menopause-age-months"]
+                    )
                 for item in food_chain_preys[name]:
                     if item not in vegetations:
                         vegetations.append(item)
@@ -56,7 +65,7 @@ class SimulationDataLoader(object):
             except AssertionError:
                 raise InputException(f"{input_path}: '{organism['name']}' was not found present in the food-chain!")
             datastore.organisms.append(Organism(organism["name"], organism["age"], e_id, organism["sex"],
-                                                OrganismInfo()))
+                                                data_organism_info))
             e_id += 1
         v_id = 0
         for vegetation in data['vegetation']:
@@ -71,3 +80,4 @@ class SimulationDataLoader(object):
         if len(vegetations) != 0:
             raise InputException(f"{input_path}: Uninitialized vegetation detected in food-chain!")
         datastore.foodChain = food_chain_preys
+        a = 3
