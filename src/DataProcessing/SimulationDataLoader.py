@@ -1,7 +1,7 @@
 import json
 
 from ..Logic.DataStore import DataStore
-from ..Logic.Entities.organism import Organism
+from ..Logic.Entities.organism import Organism, OrganismInfo
 from ..Logic.Entities.vegetation import Vegetation
 from .exceptions import InputException, MissingInputKey
 
@@ -27,6 +27,7 @@ class SimulationDataLoader(object):
             raise MissingInputKey(f"{input_path}: A required top-level key is missing from the session file: {missing_key}")
 
         food_chain_preys = data["food-chain-preys"]
+        organism_info = data["organism-characteristics"]
 
         # All keys are organisms, All non-keys are vegetation
         organisms = [entity_name for entity_name in food_chain_preys]
@@ -44,12 +45,13 @@ class SimulationDataLoader(object):
                         vegetations.append(item)
                 assert isinstance(name, str)
                 assert isinstance(organism["age"], int)
+                assert len(organism["sex"]) == 1 #Check if char
             except KeyError:
                 raise InputException(f"{input_path}: Wrong typing used when specifying an organism!")
             except AssertionError:
                 raise InputException(f"{input_path}: '{organism['name']}' was not found present in the food-chain!")
-
-            datastore.organisms.append(Organism(organism["name"], organism["age"], e_id))
+            datastore.organisms.append(Organism(organism["name"], organism["age"], e_id, organism["sex"],
+                                                OrganismInfo()))
             e_id += 1
         v_id = 0
         for vegetation in data['vegetation']:
