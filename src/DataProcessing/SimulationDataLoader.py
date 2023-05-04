@@ -32,8 +32,14 @@ class SimulationDataLoader(object):
         if missing_key is not None:
             raise MissingInputKey(f"{input_path}: A required top-level key is missing from the session file: {missing_key}")
 
-        food_chain_preys = data["food-chain-preys"]
-        organism_info = data["organism-characteristics"]
+        try:
+            food_chain_preys = data["food-chain-preys"]
+        except KeyError:
+            raise InputException("No food-chain  was specified!")
+        try:
+            organism_info = data["organism-characteristics"]
+        except KeyError:
+            raise InputException("No organism characteristics were specified!")
         data_organism_info = None
 
         # All keys are organisms, All non-keys are vegetation
