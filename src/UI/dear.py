@@ -21,11 +21,10 @@ class dpg_plot():
         print(f"Random occurences: {r_occ}")
         logger_ = logger.mvLogger(self._dpg.add_window(label="mvLogger", pos=(0, 350), width=350, height=350))
         with self._dpg.window(label="Simulation Window", width=350, height=350) as plot_window:
-            self._dpg.add_button(label="Start", callback=self.update_data)
-            self._dpg.add_same_line()
-            self._dpg.add_button(label="Pause")
-            self._dpg.add_same_line()
-            self._dpg.add_button(label="Stop")
+            with dpg.group(horizontal=True):
+                self._dpg.add_button(label="Start", callback=self.update_data)    
+                self._dpg.add_button(label="Pause")
+                self._dpg.add_button(label="Stop")
             with dpg.plot(label='Current Organism Population', height=-1, width=-1):
                 self.x_axis = self._dpg.add_plot_axis(self._dpg.mvXAxis, label='x', tag='x_axis')
                 self.y_axis = self._dpg.add_plot_axis(self._dpg.mvYAxis, label='y', tag='y_axis')
