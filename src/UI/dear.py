@@ -1,5 +1,5 @@
 import dearpygui.dearpygui as dpg
-
+import dearpygui_ext.logger as logger
 
 class dpg_plot():
     def __init__(self, _dpg) -> None:
@@ -11,7 +11,7 @@ class dpg_plot():
         self._dpg = _dpg
         self.updatectr = 0
     
-    def test(self, sender, callback):
+    def runSimulation(self, sender, callback):
         sim_name = self._dpg.get_value("sim_name")
         nr_rats = self._dpg.get_value("nr_rats")
         r_occ = self._dpg.get_value("r_occ")
@@ -34,7 +34,12 @@ class dpg_plot():
             self._dpg.add_text("Number of rats died: ")
             self._dpg.add_text("Number of random occurences happened: ")
         self._dpg.set_item_pos(data_window, [350,0])
-    def setUpPlot(self):
+        a = logger.mvLogger(self._dpg.add_window(label="mvLogger", pos=(0, 350), width=350, height=350))
+        a.log("Rat Sander has died")
+
+
+
+    def setUpSimulation(self):
         self._dpg.create_context()
         self._dpg.create_viewport(title='Simulation Configuration', width=700, height = 700)
         with self._dpg.window(label="Window", tag="primary"):
@@ -42,9 +47,11 @@ class dpg_plot():
                 with self._dpg.menu(label="Settings"):
                     self._dpg.add_input_text(label="Name of simulation", tag="sim_name")
                     self._dpg.add_input_int(label="Number of rats", tag="nr_rats")
-                    self._dpg.add_checkbox(label="Random occurences?", tag="r_occ")
-                    self._dpg.add_button(label="Start Simulation", callback=self.test)
-            
+                    self._dpg.add_text("Random occurences")
+                    self._dpg.add_text("=================")
+                    self._dpg.add_checkbox(label="Wildfires", tag="r_occ")
+                    self._dpg.add_checkbox(label="Viruses")
+                    self._dpg.add_button(label="Start Simulation", callback=self.runSimulation)
         self._dpg.setup_dearpygui()
         self._dpg.show_viewport()
         self._dpg.set_primary_window("primary", True)
@@ -75,7 +82,7 @@ class dpg_plot():
 
 if __name__ == '__main__':
     plot = dpg_plot(dpg)
-    plot.setUpPlot()
+    plot.setUpSimulation()
     plot.run()
 
 
