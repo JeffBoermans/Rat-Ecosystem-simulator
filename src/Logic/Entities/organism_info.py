@@ -1,4 +1,7 @@
 class OrganismInfo:
+    """Properties specific to a species, to be shared between
+    Organism instances.
+    """
     def __init__(self, o_m: int, o_b: int, o_ls, o_mpa: int):
         """
         :param o_m: Sexual maturity (days)
