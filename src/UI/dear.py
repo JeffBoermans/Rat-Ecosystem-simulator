@@ -9,11 +9,17 @@ class dpg_plot():
         self.x_axis = None
         self.y_axis = None
         self._dpg = _dpg
-
-    def setUpPlot(self):
-        self._dpg.create_context()
-        self._dpg.create_viewport(title='Population Simulation', width=600, height=600)
-        with self._dpg.window(label="Window", tag="primary"):
+        self.updatectr = 0
+    
+    def test(self, sender, callback):
+        sim_name = self._dpg.get_value("sim_name")
+        nr_rats = self._dpg.get_value("nr_rats")
+        r_occ = self._dpg.get_value("r_occ")
+        print(f"Name of simulation: {sim_name}")
+        print(f"Number of rats: {nr_rats}")
+        print(f"Random occurences: {r_occ}")
+    
+        with self._dpg.window(label="Simulation Window", width=350, height=350) as plot_window:
             self._dpg.add_button(label="Button", callback=self.update_data)
             with dpg.plot(label='Line Series', height=-1, width=-1):
                 self.x_axis = self._dpg.add_plot_axis(self._dpg.mvXAxis, label='x', tag='x_axis')
@@ -21,17 +27,38 @@ class dpg_plot():
             self._dpg.add_line_series(x=list(self.data_x), y=list(self.data_y),
                                 label="Label", parent="y_axis",
                                 tag="series_tag")
+        self._dpg.set_item_pos(plot_window, [0,0])
+        with self._dpg.window(label="Data box", width = 350, height = 350) as data_window:
+            self._dpg.add_text(f"Time steps processed: {self.updatectr}", tag="updatectr")
+            self._dpg.add_text("Number of rats in existence: ")
+            self._dpg.add_text("Number of rats died: ")
+            self._dpg.add_text("Number of random occurences happened: ")
+        self._dpg.set_item_pos(data_window, [350,0])
+    def setUpPlot(self):
+        self._dpg.create_context()
+        self._dpg.create_viewport(title='Simulation Configuration', width=700, height = 700)
+        with self._dpg.window(label="Window", tag="primary"):
+            with self._dpg.menu_bar():
+                with self._dpg.menu(label="Settings"):
+                    self._dpg.add_input_text(label="Name of simulation", tag="sim_name")
+                    self._dpg.add_input_int(label="Number of rats", tag="nr_rats")
+                    self._dpg.add_checkbox(label="Random occurences?", tag="r_occ")
+                    self._dpg.add_button(label="Start Simulation", callback=self.test)
+            
         self._dpg.setup_dearpygui()
         self._dpg.show_viewport()
         self._dpg.set_primary_window("primary", True)
         
 
     def run(self):
-        self._dpg.start_dearpygui()
+        # Replaces the start_dearpygui()
+        while self._dpg.is_dearpygui_running():
+            dpg.render_dearpygui_frame()
         self._dpg.destroy_context()
 
     def update_data(self):
-
+        self.updatectr += 1
+        self._dpg.set_value("updatectr", f"Time steps processed: {self.updatectr}")
         nsamples = 10
         # Get new data sample. Note we need both x and y values
         # if we want a meaningful axis unit.
