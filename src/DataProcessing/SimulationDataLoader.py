@@ -1,7 +1,7 @@
 import json
 
 from ..Logic.DataStore import DataStore
-from ..Logic.Entities.organism import Organism, OrganismInfo
+from ..Logic.Entities.organism import Organism, OrganismInfo, OrgamnismSexesEnum
 from ..Logic.Entities.vegetation import Vegetation
 from .exceptions import InputException, MissingInputKey, WrongInputFile
 
@@ -47,8 +47,8 @@ class SimulationDataLoader(object):
         vegetations = []
 
         # Populate Data Store
-        e_id = 0
-        for organism in data['organisms']:
+        allowed_sexes_values = OrgamnismSexesEnum.values()
+        for e_id, organism in enumerate(data['organisms']):
             name = organism["name"]
             if name in organisms:
                 organisms.remove(name)
@@ -66,11 +66,12 @@ class SimulationDataLoader(object):
                 assert isinstance(name, str)
                 assert isinstance(organism["age"], int)
                 assert len(organism["sex"]) == 1 #Check if char
+                assert organism["sex"] in allowed_sexes_values, f"Unknown sex value: {organism['sex']}"
             except KeyError:
                 raise InputException(f"{input_path}: Wrong typing used when specifying an organism!")
-            except AssertionError:
-                raise InputException(f"{input_path}: '{organism['name']}' was not found present in the food-chain!")
-            datastore.organisms.append(Organism(organism["name"], organism["age"], e_id, organism["sex"],
+            except AssertionError as e:
+                raise InputException(f"{input_path}: A '{organism['name']}' was not configured correctly: {e}")
+            datastore.organisms.append(Organism(organism["name"], organism["age"], e_id, OrgamnismSexesEnum(organism["sex"]),
                                                 data_organism_info))
             e_id += 1
         v_id = 0
