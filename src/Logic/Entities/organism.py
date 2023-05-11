@@ -1,3 +1,6 @@
+import random
+
+from statistics import NormalDist
 from enum import Enum
 from typing import List
 
@@ -37,3 +40,14 @@ class Organism(Entity):
         self.sex: OrgamnismSexesEnum = e_sex
         # Species specific properties
         self.organismInfo: OrganismInfo = e_info
+
+        life_span_range: int = self.organismInfo.lifespan[1] - self.organismInfo.lifespan[0]
+        life_span_range_half: int = life_span_range / 2
+        life_span_mean: int = self.organismInfo.lifespan[0] + life_span_range_half
+        self.natural_mortality_dist: NormalDist = NormalDist(mu=life_span_mean, sigma=life_span_range_half)
+
+    def should_die_naturally(self) -> bool:
+        # The probability of the organism reaching reaching its current age
+        prob_of_reaching_age = self.natural_mortality_dist.cdf(self.age)
+        # The random.random function draws form a normally distributed range [0, 1]
+        return random.random() < prob_of_reaching_age
