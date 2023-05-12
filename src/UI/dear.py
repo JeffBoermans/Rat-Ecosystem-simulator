@@ -18,6 +18,9 @@ class dpg_plot():
         self.prev_update = time.time()
 
     def runSimulation(self, sender, callback):
+        if self._dpg.get_value("file_selected") == "":
+            print("No file selected")
+            return
         nr_rats = self._dpg.get_value("i_rats")
         b_fires = self._dpg.get_value("b_fires")
         b_virus = self._dpg.get_value("b_virus")
@@ -52,26 +55,35 @@ class dpg_plot():
         self._dpg.set_item_pos(data_window, [350, 0])
         logger_.log("Rat 1 starved to death")
 
+    def fileCallback(self, app_data, sender):
+        self._dpg.set_value("file_selected", f"Current file selected: {sender['file_name']}")
+
     def setUpSimulation(self):
         self._dpg.create_context()
         self._dpg.create_viewport(
             title='Simulation Configuration', width=700, height=700)
         with self._dpg.window(label="Window", tag="primary"):
-            with self._dpg.menu_bar():
-                with self._dpg.menu(label="Settings"):
-                    self._dpg.add_input_int(
-                        label="Number of rats", tag="i_rats", min_value=1, min_clamped=True, default_value=1)
-                    self._dpg.add_text("Random occurences")
-                    self._dpg.add_text("=================")
-                    self._dpg.add_checkbox(label="Wildfires", tag="b_fires")
-                    self._dpg.add_checkbox(label="Viruses", tag="b_virus")
-                    self._dpg.add_text("=================")
-                    self._dpg.add_text(
-                        "One tick is equal to one day in the simulation")
-                    self._dpg.add_input_int(
-                        label="Seconds per tick", min_value=1, min_clamped=True, default_value=1, tag="i_tick")
-                    self._dpg.add_button(
-                        label="Start Simulation", callback=self.runSimulation)
+            self._dpg.add_input_int(
+                label="Number of rats", tag="i_rats", min_value=1, min_clamped=True, default_value=1)
+            self._dpg.add_text("Random occurences")
+            self._dpg.add_text("=================")
+            self._dpg.add_checkbox(label="Wildfires", tag="b_fires")
+            self._dpg.add_checkbox(label="Viruses", tag="b_virus")
+            self._dpg.add_text("=================")
+            self._dpg.add_text(
+                "One tick is equal to one day in the simulation")
+            self._dpg.add_input_int(
+                label="Seconds per tick", min_value=1, min_clamped=True, default_value=1, tag="i_tick")
+            self._dpg.add_text("=================")
+            self._dpg.add_text("Add a session file (.json)")
+            self._dpg.add_text("-----------------")
+            with self._dpg.file_dialog(directory_selector=False, show=False, id="file_dialog_id", width=700 ,height=400, 
+                                       callback=self.fileCallback):
+                self._dpg.add_file_extension(".json")
+            self._dpg.add_button(label="File Selector", callback=lambda: dpg.show_item("file_dialog_id"))
+            self._dpg.add_text("", tag="file_selected")
+            self._dpg.add_text("=================")
+            self._dpg.add_button(label="Start Simulation", callback=self.runSimulation)
         self._dpg.setup_dearpygui()
         self._dpg.show_viewport()
         self._dpg.set_primary_window("primary", True)
