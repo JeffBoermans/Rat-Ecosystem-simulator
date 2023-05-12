@@ -21,7 +21,8 @@ class SimulationDataAggregator(object):
 
         # Aggregate output
         for organism in datastore.organisms:
-            populations[organism.name] = populations.get(organism.name, 0) + 1
+            if organism.alive:
+                populations[organism.name] = populations.get(organism.name, 0) + 1
 
         # Prepare output
         output_json["populations"] = populations

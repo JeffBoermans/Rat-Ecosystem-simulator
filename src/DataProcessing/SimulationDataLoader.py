@@ -1,7 +1,7 @@
 import json
 
 from ..Logic.DataStore import DataStore
-from ..Logic.Entities.organism import Organism, OrganismInfo, OrgamnismSexesEnum
+from ..Logic.Entities.organism import Organism, OrganismInfo, OrganismSexesEnum
 from ..Logic.Entities.vegetation import Vegetation
 from .exceptions import InputException, MissingInputKey, WrongInputFile
 
@@ -47,7 +47,7 @@ class SimulationDataLoader(object):
         vegetations = []
 
         # Populate Data Store
-        allowed_sexes_values = OrgamnismSexesEnum.values()
+        allowed_sexes_values = OrganismSexesEnum.values()
         for e_id, organism in enumerate(data['organisms']):
             name = organism["name"]
             if name in organisms:
@@ -71,7 +71,7 @@ class SimulationDataLoader(object):
                 raise InputException(f"{input_path}: Wrong typing used when specifying an organism!")
             except AssertionError as e:
                 raise InputException(f"{input_path}: A '{organism['name']}' was not configured correctly: {e}")
-            datastore.organisms.append(Organism(organism["name"], organism["age"], e_id, OrgamnismSexesEnum(organism["sex"]),
+            datastore.organisms.append(Organism(organism["name"], organism["age"], e_id, OrganismSexesEnum(organism["sex"]),
                                                 data_organism_info))
             e_id += 1
         v_id = 0
