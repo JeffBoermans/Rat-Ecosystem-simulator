@@ -56,7 +56,7 @@ class dpg_plot():
         logger_.log("Rat 1 starved to death")
 
     def fileCallback(self, app_data, sender):
-        self._dpg.set_value("file_selected", f"Current file selected: {sender['file_name']}")
+        self._dpg.set_value("file_selected", f"{sender['selections'][sender['file_name']]}")
 
     def setUpSimulation(self):
         self._dpg.create_context()
@@ -100,7 +100,7 @@ class dpg_plot():
             if not self.paused:
                 cur_time = time.time()
                 elapsed = cur_time - self.prev_update
-                print(elapsed)
+                # print(elapsed)
                 if elapsed >= self.sec_tick:
                     self.update_data()
                     self.prev_update = cur_time
