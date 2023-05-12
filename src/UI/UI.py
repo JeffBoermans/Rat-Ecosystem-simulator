@@ -138,9 +138,3 @@ class dpg_plot():
             'series_tag', [list(self.data_x), list(self.data_y)])
         dpg.fit_axis_data('x_axis')
         dpg.fit_axis_data('y_axis')
-
-
-if __name__ == '__main__':
-    plot = dpg_plot(dpg)
-    plot.setUpSimulation()
-    plot.run()
