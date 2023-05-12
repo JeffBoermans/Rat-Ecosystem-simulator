@@ -143,9 +143,7 @@ class Simulation(object):
                         updated_organisms.append(org)
                 else:
                     updated_organisms.append(org)
-        print(updated_organisms)
         self.dataStore.organisms = updated_organisms
-        print(self.dataStore.organisms)
         return log
 
     def _nextday(self):
