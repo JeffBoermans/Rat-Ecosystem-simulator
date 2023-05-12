@@ -10,15 +10,17 @@ class Simulation(object):
     def __init__(self, s_path: str) -> None:
         self.dataStore: DataStore = DataStore(s_path)
 
+        self._sim_day = 0
+
     def run(self, days: int = 0):
         """Run the simulation.
         This is the entry point of the simulation.
         """
         self._load()
-        for i in range(days):
-            self._simulate()
+        for _ in range(days):
+            self.simulate()
         self.dataStore.printOrganisms()
-        #print(self.dataStore.organisms[0].organismInfo.lifespan)
+        # print(self.dataStore.organisms[0].organismInfo.lifespan)
 
     def persist(self, output_path: str) -> None:
         """Persist the contents and results of the simulation to an output file.
@@ -28,20 +30,31 @@ class Simulation(object):
         aggregator: SimulationDataPersistor = SimulationDataPersistor()
         aggregator.persist(self.dataStore, output_path)
 
+    def organism_count(self):
+        """ Get amount of organisms currently alive in simulation
+        """
+        return len(self.dataStore.organisms)
+
+    def day(self):
+        return self._sim_day
+
     def _load(self):
         """Populate the simulation from an input file.
         """
         loader: SimulationDataLoader = SimulationDataLoader()
         loader.load(self.dataStore, self.dataStore.session_path)
 
-    def _simulate(self):
+    def simulate(self):
         """ Simulate a day in the current ecosystem.
         """
 
         self._nextday()
-        self._mortality()
+        death_log = self._mortality()
         self._reproduction()
-        self._nativity()
+        birth_log = self._nativity()
+        logs = death_log + birth_log
+        random.shuffle(logs)
+        return logs
 
     def _reproduction(self):
         # First: Put Females into Menopause
@@ -61,8 +74,6 @@ class Simulation(object):
         if not smm_flag:
             return
 
-
-
         # Third: Impregnate all sexually mature Females
         for org in self.dataStore.organisms:
             if org.sex.name == "female" and org.breedingTerm == -1 and \
@@ -71,8 +82,7 @@ class Simulation(object):
                 org.breedingTerm = org.age
                 print("Female impregnated.")
 
-
-    def _int_to_sex(self, sex_int:int) -> str:
+    def _int_to_sex(self, sex_int: int) -> str:
         if sex_int == 0:
             return 'm'
         elif sex_int == 1:
@@ -81,6 +91,7 @@ class Simulation(object):
             raise Exception("Gender Error.")
 
     def _nativity(self):
+        log = []
         babies: list[Organism] = []
         last_id: int = self.dataStore.organisms[-1].id
         for org in self.dataStore.organisms:
@@ -94,34 +105,49 @@ class Simulation(object):
                     print("Birth")
                     org.breedingTerm = -1
                     last_id += 1
-                    sex_int: int = random.randint(0,1) # 0:male, 1:female
+                    sex_int: int = random.randint(0, 1)  # 0:male, 1:female
                     sex: str = self._int_to_sex(sex_int)
                     sex_enum: OrganismSexesEnum = OrganismSexesEnum(sex)
 
-                    new_baby = Organism(org.name, 0, last_id, sex_enum, org.organismInfo)
+                    new_baby = Organism(
+                        org.name, 0, last_id, sex_enum, org.organismInfo)
+                    log.append(f"{new_baby.name} {new_baby.id} is born.")
                     babies.append(new_baby)
 
         for baby in babies:
             self.dataStore.organisms.append(baby)
-
+        return log
 
     def _mortality(self):
+        log = []
+        updated_organisms = []
         for org in self.dataStore.organisms:
             if org.alive:
                 if org.organismInfo.lifespan[1] < org.age:
 
-                    raise InvalidAge(f"Invalid Age of {org.age} days, exceeding lifespan of {org.organismInfo.lifespan[1]} days.")
+                    raise InvalidAge(
+                        f"Invalid Age of {org.age} days, exceeding lifespan of {org.organismInfo.lifespan[1]} days.")
                 elif org.organismInfo.lifespan[1] == org.age:
                     # Organism dies
+                    log.append(f"{org.name} {org.id} died.")
                     print(str(org.id) + " died.")
                     org.alive = False
+                    self.dataStore.death_organisms.append(org)
                 elif org.organismInfo.lifespan[0] <= org.age:
-                    if random.randint(0, 42) == 1: # TODO Normale Verdeling
+                    if random.randint(0, 42) == 1:  # TODO Normale Verdeling
+                        log.append(f"{org.name} {org.id} died.")
                         print(str(org.id) + " died.")
                         org.alive = False
-
+                        self.dataStore.death_organisms.append(org)
+                    else:
+                        updated_organisms.append(org)
+                else:
+                    updated_organisms.append(org)
+        self.dataStore.organisms = updated_organisms
+        return log
 
     def _nextday(self):
+        self._sim_day += 1
         for org in self.dataStore.organisms:
             if org.alive:
                 org.age += 1
