@@ -1,5 +1,6 @@
 import dearpygui.dearpygui as dpg
 import dearpygui_ext.logger as logger
+import time
 
 class dpg_plot():
     def __init__(self, _dpg) -> None:
@@ -10,20 +11,24 @@ class dpg_plot():
         self.y_axis = None
         self._dpg = _dpg
         self.updatectr = 0
+        self.sec_tick = 0
 
     
     def runSimulation(self, sender, callback):
-        sim_name = self._dpg.get_value("sim_name")
-        nr_rats = self._dpg.get_value("nr_rats")
-        r_occ = self._dpg.get_value("r_occ")
-        print(f"Name of simulation: {sim_name}")
+        nr_rats = self._dpg.get_value("i_rats")
+        b_fires = self._dpg.get_value("b_fires")
+        b_virus = self._dpg.get_value("b_virus")
+        self.sec_tick = self._dpg.get_value("i_tick")
+
         print(f"Number of rats: {nr_rats}")
-        print(f"Random occurences: {r_occ}")
+        print(f"Random Fires: {b_fires}")
+        print(f"Random Viruses: {b_virus}")
+        print(f"Seconds per tick: {self.sec_tick}")
         logger_ = logger.mvLogger(self._dpg.add_window(label="mvLogger", pos=(0, 350), width=350, height=350))
         with self._dpg.window(label="Simulation Window", width=350, height=350) as plot_window:
             with dpg.group(horizontal=True):
                 self._dpg.add_button(label="Start", callback=self.update_data)    
-                self._dpg.add_button(label="Pause")
+                self._dpg.add_button(label="Pause", callback = self.pause, tag="pause")
                 self._dpg.add_button(label="Stop")
             with dpg.plot(label='Current Organism Population', height=-1, width=-1):
                 self.x_axis = self._dpg.add_plot_axis(self._dpg.mvXAxis, label='x', tag='x_axis')
@@ -33,7 +38,7 @@ class dpg_plot():
                                 tag="series_tag")
         self._dpg.set_item_pos(plot_window, [0,0])
         with self._dpg.window(label="Data box", width = 350, height = 350) as data_window:
-            self._dpg.add_text(f"Time steps processed: {self.updatectr}", tag="updatectr")
+            self._dpg.add_text(f"Ticks: {self.updatectr}", tag="updatectr")
             self._dpg.add_text("Number of rats in existence: ")
             self._dpg.add_text("Number of rats died: ")
             self._dpg.add_text("Number of random occurences happened: ")
@@ -48,41 +53,58 @@ class dpg_plot():
         with self._dpg.window(label="Window", tag="primary"):
             with self._dpg.menu_bar():
                 with self._dpg.menu(label="Settings"):
-                    self._dpg.add_input_text(label="Name of simulation", tag="sim_name")
-                    self._dpg.add_input_int(label="Number of rats", tag="nr_rats")
+                    self._dpg.add_input_int(label="Number of rats", tag="i_rats", min_value=1, min_clamped=True, default_value=1)
                     self._dpg.add_text("Random occurences")
                     self._dpg.add_text("=================")
-                    self._dpg.add_checkbox(label="Wildfires", tag="r_occ")
-                    self._dpg.add_checkbox(label="Viruses")
+                    self._dpg.add_checkbox(label="Wildfires", tag="b_fires")
+                    self._dpg.add_checkbox(label="Viruses", tag="b_virus")
+                    self._dpg.add_text("=================")
+                    self._dpg.add_text("One tick is equal to one day in the simulation")
+                    self._dpg.add_input_int(label="Seconds per tick", min_value=1, min_clamped=True, default_value=1, tag="i_tick")
                     self._dpg.add_button(label="Start Simulation", callback=self.runSimulation)
         self._dpg.setup_dearpygui()
         self._dpg.show_viewport()
         self._dpg.set_primary_window("primary", True)
         
+    def pause(self):
+        pass
 
     def run(self):
-        # Replaces the start_dearpygui()
         while self._dpg.is_dearpygui_running():
             dpg.render_dearpygui_frame()
         self._dpg.destroy_context()
 
     def update_data(self):
-        self.updatectr += 1
-        self._dpg.set_value("updatectr", f"Time steps processed: {self.updatectr}")
-        nsamples = 10
-        # Get new data sample. Note we need both x and y values
-        # if we want a meaningful axis unit.
-        self.data_x.append(self.time_step)
-        self.data_y.append(self.data_y[self.time_step-1]*2)
+        # print(self._dpg.get_item_state("pause"))
+        start = time.time()
+        time.process_time()
+        elapsed = 0
+        while not self._dpg.get_item_state("pause")["clicked"]:
+            print(self._dpg.get_item_state("pause")["clicked"])
+            while elapsed < self.sec_tick:
+                elapsed = time.time() - start
+                print ("loop cycle time: %f, seconds count: %02d" % (time.process_time() , elapsed))
+                time.sleep(1) 
 
-        # set the series x and y to the last nsamples
-        self._dpg.set_value(
-            'series_tag', [list(self.data_x), list(self.data_y)])
-        dpg.fit_axis_data('x_axis')
-        dpg.fit_axis_data('y_axis')
+            self.updatectr += 1
+            self._dpg.set_value("updatectr", f"Time steps processed: {self.updatectr}")
+            nsamples = 10
+            # Get new data sample. Note we need both x and y values
+            # if we want a meaningful axis unit.
+            self.data_x.append(self.time_step)
+            self.data_y.append(self.data_y[self.time_step-1]*2)
 
-        self.time_step = self.time_step+1
+            # set the series x and y to the last nsamples
+            self._dpg.set_value(
+                'series_tag', [list(self.data_x), list(self.data_y)])
+            dpg.fit_axis_data('x_axis')
+            dpg.fit_axis_data('y_axis')
 
+            self.time_step = self.time_step+1
+
+            elapsed = 0
+            start = time.time()
+            time.process_time()
 if __name__ == '__main__':
     plot = dpg_plot(dpg)
     plot.setUpSimulation()
