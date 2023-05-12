@@ -44,14 +44,14 @@ class Organism(Entity):
         self.fertile = True
 
         life_span_range: int = self.organismInfo.lifespan[1] - self.organismInfo.lifespan[0]
-        life_span_range_half: int = life_span_range / 2
-        life_span_mean: int = self.organismInfo.lifespan[0] + life_span_range_half
-        self.natural_mortality_dist: NormalDist = NormalDist(mu=life_span_mean, sigma=life_span_range_half)
+        life_span_std: int = life_span_range / 4
+        life_span_mean: int = self.organismInfo.lifespan[0] + life_span_std
+        self.natural_mortality_dist: NormalDist = NormalDist(mu=life_span_mean, sigma=life_span_std)
 
         menopause_range: int = self.organismInfo.menopause[1] - self.organismInfo.menopause[0]
-        menopause_range_half: int = menopause_range / 2
-        menopause_mean: int = self.organismInfo.menopause[0] + menopause_range_half
-        self.menopause_dist: NormalDist = NormalDist(mu=menopause_mean, sigma=menopause_range_half)
+        menopause_range_std: int = menopause_range / 4
+        menopause_mean: int = self.organismInfo.menopause[0] + menopause_range_std
+        self.menopause_dist: NormalDist = NormalDist(mu=menopause_mean, sigma=menopause_range_std)
 
     def should_die_naturally(self) -> bool:
         # The probability of the organism having died before its current age
