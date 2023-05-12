@@ -36,7 +36,7 @@ class dpg_plot():
         print(f"Number of rats: {self.simulation.organism_count()}")
         print(f"Random Fires: {b_fires}")
         print(f"Random Viruses: {b_virus}")
-        print(f"Seconds per tick: {self.sec_tick}")
+        print(f"Ticks per second: {self.sec_tick}")
         self.logger = logger.mvLogger(self._dpg.add_window(
             label="mvLogger", pos=(0, 350), width=350, height=350))
         with self._dpg.window(label="Simulation Window", width=350, height=350) as plot_window:
@@ -113,7 +113,7 @@ class dpg_plot():
                 cur_time = time.time()
                 elapsed = cur_time - self.prev_update
                 # print(elapsed)
-                if elapsed >= self.sec_tick:
+                if elapsed >= 1/self.sec_tick:
                     self.update_data()
                     self.prev_update = cur_time
         self._dpg.destroy_context()
