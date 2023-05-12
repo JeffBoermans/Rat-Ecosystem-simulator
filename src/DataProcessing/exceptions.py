@@ -15,4 +15,14 @@ class WrongInputFile(InputException):
     """
     pass
 
+class SimulationException(Exception):
+    """A general exception to indicate that the simulation is
+    invalid/inconsistent.
+        """
+    pass
 
+class InvalidAge(SimulationException):
+    """A general exception to indicate that the simulation is
+    invalid.
+        """
+    pass
