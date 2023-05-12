@@ -1,9 +1,14 @@
+import random
+
+from typing import List
+
 from .DataStore import DataStore
 from ..DataProcessing.SimulationDataPersistor import SimulationDataPersistor
 from ..DataProcessing.SimulationDataLoader import SimulationDataLoader
 from ..DataProcessing.exceptions import *
-import random
+from .exceptions import DuplicateExtension
 from ..Logic.Entities.organism import Organism, OrganismSexesEnum
+from .Extensions.SimulationExtension import SimulationMortalityExtension
 
 
 class Simulation(object):
@@ -11,6 +16,10 @@ class Simulation(object):
         self.dataStore: DataStore = DataStore(s_path)
 
         self._sim_day = 0
+
+        # The active list of mortality extensions, which are consulted
+        # periodically to cull the entity populations
+        self.mortality_extensions: List[SimulationMortalityExtension] = []
 
     def run(self, days: int = 0):
         """Run the simulation.
@@ -29,6 +38,18 @@ class Simulation(object):
         """
         aggregator: SimulationDataPersistor = SimulationDataPersistor()
         aggregator.persist(self.dataStore, output_path)
+
+    def register_mortality_extension(self, extension: SimulationMortalityExtension):
+        """Register the mortality extension instance with the simulation.
+
+        Duplicate extensions raise an exception, only one extension with the same name may
+        exist in the simulation at a time.
+
+        :param extension: The extension to register
+        """
+        if extension.name in (ext.name for ext in self.mortality_extensions):
+            raise DuplicateExtension(f"The mortality extension '{extension.name}' is already registerd")
+        self.mortality_extensions.append(extension)
 
     def organism_count(self):
         """ Get amount of organisms currently alive in simulation
@@ -60,11 +81,8 @@ class Simulation(object):
         # First: Put Females into Menopause
         for org in self.dataStore.organisms:
             if org.sex.name == "female" and org.fertile:
-                if org.age > org.organismInfo.menopause[1]:
+                if org.should_enter_menopause():
                     org.fertile = False
-                elif org.age >= org.organismInfo.menopause[0]:
-                    if random.randint(0, 21) == 1:  # TODO Normale Verdeling
-                        org.fertile = False
 
         # Second: Check for 1 sexually mature Male
         smm_flag: bool = False
@@ -122,27 +140,13 @@ class Simulation(object):
         log = []
         updated_organisms = []
         for org in self.dataStore.organisms:
-            if org.alive:
-                if org.organismInfo.lifespan[1] < org.age:
-
-                    raise InvalidAge(
-                        f"Invalid Age of {org.age} days, exceeding lifespan of {org.organismInfo.lifespan[1]} days.")
-                elif org.organismInfo.lifespan[1] == org.age:
-                    # Organism dies
-                    log.append(f"{org.name} {org.id} died.")
-                    print(str(org.id) + " died.")
-                    org.alive = False
-                    self.dataStore.death_organisms.append(org)
-                elif org.organismInfo.lifespan[0] <= org.age:
-                    if random.randint(0, 42) == 1:  # TODO Normale Verdeling
-                        log.append(f"{org.name} {org.id} died.")
-                        print(str(org.id) + " died.")
-                        org.alive = False
-                        self.dataStore.death_organisms.append(org)
-                    else:
-                        updated_organisms.append(org)
-                else:
-                    updated_organisms.append(org)
+            if org.should_die_naturally():
+                log.append(f"{org.name} {org.id} died at age {org.age}.")
+                print(str(org.id) + " died.")
+                org.alive = False
+                self.dataStore.death_organisms.append(org)
+            else:
+                updated_organisms.append(org)
         self.dataStore.organisms = updated_organisms
         return log
 

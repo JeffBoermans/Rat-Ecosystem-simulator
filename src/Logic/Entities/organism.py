@@ -42,3 +42,25 @@ class Organism(Entity):
         self.organismInfo: OrganismInfo = e_info
         self.breedingTerm = -1
         self.fertile = True
+
+        life_span_range: int = self.organismInfo.lifespan[1] - self.organismInfo.lifespan[0]
+        life_span_range_half: int = life_span_range / 2
+        life_span_mean: int = self.organismInfo.lifespan[0] + life_span_range_half
+        self.natural_mortality_dist: NormalDist = NormalDist(mu=life_span_mean, sigma=life_span_range_half)
+
+        menopause_range: int = self.organismInfo.menopause[1] - self.organismInfo.menopause[0]
+        menopause_range_half: int = menopause_range / 2
+        menopause_mean: int = self.organismInfo.menopause[0] + menopause_range_half
+        self.menopause_dist: NormalDist = NormalDist(mu=menopause_mean, sigma=menopause_range_half)
+
+    def should_die_naturally(self) -> bool:
+        # The probability of the organism having died before its current age
+        prob_of_death_before_age = self.natural_mortality_dist.cdf(self.age)
+        # The random.random function draws form a normally distributed range [0, 1]
+        return random.random() < prob_of_death_before_age
+
+    def should_enter_menopause(self) -> bool:
+        # The probability of the organism having reached menopause at its current age
+        prob_of_having_reached_menopause = self.menopause_dist.cdf(self.age)
+        # The random.random function draws form a normally distributed range [0, 1]
+        return random.random() < prob_of_having_reached_menopause
