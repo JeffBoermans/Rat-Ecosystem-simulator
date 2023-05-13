@@ -33,9 +33,9 @@ jobs:
       - checkout
       - run: choco upgrade python
       - run: pip install virtualenv
-      - run: install.bat
+      - run: .\install.bat
       # building
-      - run: build.bat
+      - run: .\build.bat
       - run: move build\dist\main.exe build\simulation-windows.exe
       - run: ls build\dist
 
