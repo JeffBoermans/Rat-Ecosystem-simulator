@@ -22,6 +22,7 @@ jobs:
       # Building
       - run: ./build.sh
       - run: mv build/dist/main build/simulation-linux
+      # Save executable for later job
       - persist_to_workspace:
           root: .
           paths:
@@ -37,9 +38,10 @@ jobs:
       - run: choco upgrade python
       - run: pip install virtualenv
       - run: .\install.bat
-      # building
+      # Building
       - run: .\build.bat
       - run: move build\dist\main.exe build\simulation-windows.exe
+      # Save executable for later job
       - persist_to_workspace:
           root: .
           paths:
@@ -48,10 +50,11 @@ jobs:
   git-persist:
     resource_class: small
     docker:
-      - image: cimg/base
+      - image: cimg/base:2023.05
     steps:
       # Setup
       - checkout
+      # Import executables from previous jobs
       - attach_workspace:
           at: .
       # Push resulting executable back to repo
