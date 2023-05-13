@@ -22,12 +22,10 @@ jobs:
       # Building
       - run: ./build.sh
       - run: mv build/dist/main build/simulation-linux
-      # Push resulting executable back to repo
-      - run: git config user.email "thomas.gueutal@student.uantwerpen.be"
-      - run: git config user.name "Thomas Gueutal"
-      - run: git add build/simulation-linux
-      - run: git commit -m "[skip ci] Rebuild linux executable."
-      - run: git push
+      - persist_to_workspace:
+          root: .
+          paths:
+            - /build/simulation-linux
 
   # Just mostly duplicate code, deal with it, this is a hack
   windows-executable-gen:
@@ -42,18 +40,36 @@ jobs:
       # building
       - run: .\build.bat
       - run: move build\dist\main.exe build\simulation-windows.exe
+      - persist_to_workspace:
+          root: .
+          paths:
+            - /build/simulation-windows.exe
+
+  git-persist:
+    resource_class: small
+    docker:
+      - image: cimg/base
+    steps:
+      # Setup
+      - checkout
+      - attach_workspace:
+          at: .
       # Push resulting executable back to repo
       - run: git config user.email "thomas.gueutal@student.uantwerpen.be"
       - run: git config user.name "Thomas Gueutal"
+      - run: git add build/simulation-linux
       - run: git add build/simulation-windows.exe
-      - run: git commit -m "[skip ci] Rebuild windows executable."
+      - run: git commit -m "[skip ci] Rebuild executables."
       - run: git push
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  executable-gen: # This is the name of the workflow, feel free to change it to better match your workflow.
-    # Inside the workflow, you define the jobs you want to run.
+  build_accept_deploy:
     jobs:
       - linux-executable-gen
       - windows-executable-gen
+      - git-persist:
+          requires:
+            - linux-executable-gen
+            - windows-executable-gen
