@@ -29,7 +29,6 @@ class UI():
         self.sec_tick = self._dpg.get_value("i_tick")
 
         self.simulation = Simulation(self._dpg.get_value("file_selected"))
-        self.simulation._load()
         self.data_y[0] = self.simulation.organism_alive_count()
 
         print(f"Number of rats: {self.simulation.organism_alive_count()}")
@@ -57,7 +56,7 @@ class UI():
             self._dpg.add_text(
                 f"Ticks: {self.simulation.day()}", tag="updatectr")
             self._dpg.add_text("Number of rats in existence: ", tag="r_alive")
-            self._dpg.add_text("Number of rats died: ", tag = "r_dead")
+            self._dpg.add_text("Number of rats died: ", tag="r_dead")
             self._dpg.add_text("Number of random occurences happened: ")
         self._dpg.set_item_pos(data_window, [350, 0])
         # Logging example

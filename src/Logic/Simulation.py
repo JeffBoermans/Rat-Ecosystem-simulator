@@ -17,6 +17,8 @@ class Simulation(object):
 
         self._sim_day = 0
 
+        self._load()
+
         # The active list of mortality extensions, which are consulted
         # periodically to cull the entity populations
         self.mortality_extensions: List[SimulationMortalityExtension] = []
@@ -25,7 +27,6 @@ class Simulation(object):
         """Run the simulation.
         This is the entry point of the simulation.
         """
-        self._load()
         for _ in range(days):
             self.simulate()
         self.dataStore.printOrganisms()
