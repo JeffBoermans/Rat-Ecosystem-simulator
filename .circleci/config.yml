@@ -37,12 +37,15 @@ jobs:
       # building
       - run: .\build.bat
 
+      - run: ls venv
+      - run: ls venv/Scripts
+
       - run: ls
       - run: ls build\
       - run: ls build\dist
 
       - run: move build\dist\main.exe build\simulation-windows.exe
-      - run: ls build\dist
+      - run: ls build\
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
