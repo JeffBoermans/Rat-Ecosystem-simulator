@@ -1,5 +1,3 @@
-@echo off
-
 SET DIR=build\
 
 REM Setup build output location
