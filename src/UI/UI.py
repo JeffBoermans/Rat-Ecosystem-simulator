@@ -80,7 +80,7 @@ class dpg_plot():
             self._dpg.add_text(
                 "One tick is equal to one day in the simulation")
             self._dpg.add_input_int(
-                label="Seconds per tick", min_value=1, min_clamped=True, default_value=1, tag="i_tick")
+                label="Ticks per second", min_value=1, min_clamped=True, default_value=1, tag="i_tick")
             self._dpg.add_text("=================")
             self._dpg.add_text("Add a session file (.json)")
             self._dpg.add_text("-----------------")
