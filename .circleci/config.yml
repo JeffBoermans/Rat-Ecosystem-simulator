@@ -23,6 +23,8 @@ jobs:
       - run: ./build.sh
       - run: mv build/dist/main build/simulation-linux
       # Push resulting executable back to repo
+      - run: git config user.email "thomas.gueutal@student.uantwerpen.be"
+      - run: git config user.name "Thomas Gueutal"
       - run: git add build/simulation-linux
       - run: git commit -m "[skip ci] Rebuild linux executable."
       - run: git push
@@ -40,8 +42,9 @@ jobs:
       # building
       - run: .\build.bat
       - run: move build\dist\main.exe build\simulation-windows.exe
-      - run: ls build\
-
+      # Push resulting executable back to repo
+      - run: git config user.email "thomas.gueutal@student.uantwerpen.be"
+      - run: git config user.name "Thomas Gueutal"
       - run: git add build/simulation-windows.exe
       - run: git commit -m "[skip ci] Rebuild windows executable."
       - run: git push
