@@ -51,11 +51,16 @@ class Simulation(object):
             raise DuplicateExtension(f"The mortality extension '{extension.name}' is already registerd")
         self.mortality_extensions.append(extension)
 
-    def organism_count(self):
+    def organism_alive_count(self):
         """ Get amount of organisms currently alive in simulation
         """
         return len(self.dataStore.organisms)
-
+    
+    def organism_dead_count(self):
+        """ Get amount of organisms that have passed away in the simulation
+        """
+        return len(self.dataStore.death_organisms)
+    
     def day(self):
         return self._sim_day
 
@@ -73,9 +78,7 @@ class Simulation(object):
         death_log = self._mortality()
         self._reproduction()
         birth_log = self._nativity()
-        logs = death_log + birth_log
-        random.shuffle(logs)
-        return logs
+        return death_log + birth_log, self.organism_alive_count(), self.organism_dead_count()
 
     def _reproduction(self):
         # First: Put Females into Menopause

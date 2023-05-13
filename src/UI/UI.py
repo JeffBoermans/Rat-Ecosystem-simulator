@@ -24,16 +24,15 @@ class dpg_plot():
         if self._dpg.get_value("file_selected") == "":
             print("No file selected")
             return
-        nr_rats = self._dpg.get_value("i_rats")
         b_fires = self._dpg.get_value("b_fires")
         b_virus = self._dpg.get_value("b_virus")
         self.sec_tick = self._dpg.get_value("i_tick")
 
         self.simulation = Simulation(self._dpg.get_value("file_selected"))
         self.simulation._load()
-        self.data_y[0] = self.simulation.organism_count()
+        self.data_y[0] = self.simulation.organism_alive_count()
 
-        print(f"Number of rats: {self.simulation.organism_count()}")
+        print(f"Number of rats: {self.simulation.organism_alive_count()}")
         print(f"Random Fires: {b_fires}")
         print(f"Random Viruses: {b_virus}")
         print(f"Ticks per second: {self.sec_tick}")
@@ -57,8 +56,8 @@ class dpg_plot():
         with self._dpg.window(label="Data box", width=350, height=350) as data_window:
             self._dpg.add_text(
                 f"Ticks: {self.simulation.day()}", tag="updatectr")
-            self._dpg.add_text("Number of rats in existence: ")
-            self._dpg.add_text("Number of rats died: ")
+            self._dpg.add_text("Number of rats in existence: ", tag="r_alive")
+            self._dpg.add_text("Number of rats died: ", tag = "r_dead")
             self._dpg.add_text("Number of random occurences happened: ")
         self._dpg.set_item_pos(data_window, [350, 0])
         # Logging example
@@ -73,8 +72,6 @@ class dpg_plot():
         self._dpg.create_viewport(
             title='Simulation Configuration', width=700, height=700)
         with self._dpg.window(label="Window", tag="primary"):
-            self._dpg.add_input_int(
-                label="Number of rats", tag="i_rats", min_value=1, min_clamped=True, default_value=1)
             self._dpg.add_text("Random occurences")
             self._dpg.add_text("=================")
             self._dpg.add_checkbox(label="Wildfires", tag="b_fires")
@@ -124,11 +121,13 @@ class dpg_plot():
         self._dpg.set_value(
             "updatectr", f"Time steps processed: {self.simulation.day()}")
         # Advance the time in the simulation
-        logs = self.simulation.simulate()
+        logs, alive, dead = self.simulation.simulate()
         # Get new data from the simulation. Note we need both x and y values
         # if we want a meaningful axis unit.
         self.data_x.append(self.simulation.day())
-        self.data_y.append(self.simulation.organism_count())
+        self.data_y.append(self.simulation.organism_alive_count())
+        self._dpg.set_value("r_alive", f"Number of rats alive: {alive}")
+        self._dpg.set_value("r_dead", f"Number of rats died: {dead}")
 
         for log in logs:
             self.logger.log(log)
