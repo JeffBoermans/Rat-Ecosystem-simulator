@@ -3,7 +3,7 @@
 REM Setup venv
 echo "[Install] Setup python virtual env"
 python -m venv venv
-venv\Scripts\activate
+rem venv\Scripts\activate
 
 REM Install reqs
 echo "[Install] Install dependencies"
