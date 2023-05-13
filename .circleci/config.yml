@@ -22,7 +22,10 @@ jobs:
       # Building
       - run: ./build.sh
       - run: mv build/dist/main build/simulation-linux
-      - run: ls build/
+      # Push resulting executable back to repo
+      - run: git add build/simulation-linux
+      - run: git commit -m "[skip ci] Rebuild linux executable."
+      - run: git push
 
   # Just mostly duplicate code, deal with it, this is a hack
   windows-executable-gen:
@@ -38,6 +41,10 @@ jobs:
       - run: .\build.bat
       - run: move build\dist\main.exe build\simulation-windows.exe
       - run: ls build\
+
+      - run: git add build/simulation-windows.exe
+      - run: git commit -m "[skip ci] Rebuild windows executable."
+      - run: git push
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
