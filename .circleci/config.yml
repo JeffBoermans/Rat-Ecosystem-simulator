@@ -25,7 +25,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - /build/simulation-linux
+            - build/simulation-linux
 
   # Just mostly duplicate code, deal with it, this is a hack
   windows-executable-gen:
@@ -43,7 +43,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - /build/simulation-windows.exe
+            - build/simulation-windows.exe
 
   git-persist:
     resource_class: small
