@@ -18,6 +18,13 @@ jobs:
       - run: ./install.sh
       # Building
       - run: ./build.sh
+
+      # TODO \/ REMOVE
+      - run: ls build/
+      - run: ls build/build/
+      - run: ls build/build/dist/
+      # TODO /\ REMOVE
+
       - run: mv build/build/dist/main build/
       - run: ls build/
 
@@ -25,7 +32,7 @@ jobs:
   windows-executable-gen:
     machine: # executor type
       image: windows-default
-    resource_class: windows.small
+    resource_class: windows.medium
     steps:
       # Commands are run in a Windows virtual machine environment
       # Setup
