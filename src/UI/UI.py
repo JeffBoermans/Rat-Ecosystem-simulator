@@ -5,7 +5,7 @@ import time
 from ..Logic.Simulation import Simulation
 
 
-class dpg_plot():
+class UI():
     def __init__(self, _dpg) -> None:
         self.data_x = [0.0]
         self.data_y = [0.0]

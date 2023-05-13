@@ -1,9 +1,9 @@
 import dearpygui.dearpygui as dpg
-from src.UI.UI import dpg_plot
+from src.UI.UI import UI
 
 
 def main():
-    plot = dpg_plot(dpg)
+    plot = UI(dpg)
     plot.setUpSimulation()
     plot.run()
 
