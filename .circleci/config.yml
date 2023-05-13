@@ -18,14 +18,7 @@ jobs:
       - run: ./install.sh
       # Building
       - run: ./build.sh
-
-      # TODO \/ REMOVE
-      - run: ls build/
-      - run: ls build/build/
-      - run: ls build/build/dist/
-      # TODO /\ REMOVE
-
-      - run: mv build/build/dist/main build/
+      - run: mv build/dist/main build/
       - run: ls build/
 
   # Just mostly duplicate code, deal with it, this is a hack
