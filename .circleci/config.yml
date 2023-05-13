@@ -36,6 +36,10 @@ jobs:
       - run: .\install.bat
       # building
       - run: .\build.bat
+
+      - run: ls build\
+      - run: ls build\dist
+
       - run: move build\dist\main.exe build\simulation-windows.exe
       - run: ls build\dist
 

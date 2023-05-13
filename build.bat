@@ -4,7 +4,7 @@ SET DIR=build\
 
 REM Setup build output location
 echo "[Build] Setup build dir"
-venv/Scripts/activate
+. venv/Scripts/activate
 if not exists (
     mkdir %DIR%
 )
