@@ -1,4 +1,4 @@
-SET DIR=build\
+SET DIR=build
 
 REM Setup build output location
 echo "[Build] Setup build dir"

@@ -37,6 +37,7 @@ jobs:
       # building
       - run: .\build.bat
 
+      - run: ls
       - run: ls build\
       - run: ls build\dist
 
