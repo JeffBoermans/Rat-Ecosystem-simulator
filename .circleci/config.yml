@@ -37,6 +37,9 @@ jobs:
       # building
       - run: .\build.bat
 
+      - run: ls venv
+      - run: ls venv/Scripts
+
       - run: ls
       - run: ls build\
       - run: ls build\dist
