@@ -2,7 +2,7 @@ SET DIR=build
 
 REM Setup build output location
 echo "[Build] Setup build dir"
-rem venv/Scripts/activate
+.\venv\Scripts\activate
 if not exist %DIR% mkdir %DIR%
 
 REM Build the project into an executable
