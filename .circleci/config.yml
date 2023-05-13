@@ -39,6 +39,7 @@ jobs:
       - run: pip install virtualenv
       - run: .\install.bat
       # Building
+      - run: rm build\simulation-windows.exe    # Prevent 'move - Cannot create a file when that file already exists'
       - run: .\build.bat
       - run: move build\dist\main.exe build\simulation-windows.exe
       # Save executable for later job
