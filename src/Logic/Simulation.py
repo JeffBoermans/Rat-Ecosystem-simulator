@@ -17,6 +17,8 @@ class Simulation(object):
 
         self._sim_day = 0
 
+        self._load()
+
         # The active list of mortality extensions, which are consulted
         # periodically to cull the entity populations
         self.mortality_extensions: List[SimulationMortalityExtension] = []
@@ -25,7 +27,6 @@ class Simulation(object):
         """Run the simulation.
         This is the entry point of the simulation.
         """
-        self._load()
         for _ in range(days):
             self.simulate()
         self.dataStore.printOrganisms()
@@ -48,13 +49,19 @@ class Simulation(object):
         :param extension: The extension to register
         """
         if extension.name in (ext.name for ext in self.mortality_extensions):
-            raise DuplicateExtension(f"The mortality extension '{extension.name}' is already registerd")
+            raise DuplicateExtension(
+                f"The mortality extension '{extension.name}' is already registerd")
         self.mortality_extensions.append(extension)
 
-    def organism_count(self):
+    def organism_alive_count(self):
         """ Get amount of organisms currently alive in simulation
         """
         return len(self.dataStore.organisms)
+
+    def organism_dead_count(self):
+        """ Get amount of organisms that have passed away in the simulation
+        """
+        return len(self.dataStore.death_organisms)
 
     def day(self):
         return self._sim_day
@@ -73,9 +80,7 @@ class Simulation(object):
         death_log = self._mortality()
         self._reproduction()
         birth_log = self._nativity()
-        logs = death_log + birth_log
-        random.shuffle(logs)
-        return logs
+        return death_log + birth_log, self.organism_alive_count(), self.organism_dead_count()
 
     def _reproduction(self):
         # First: Put Females into Menopause
@@ -111,6 +116,9 @@ class Simulation(object):
     def _nativity(self):
         log = []
         babies: list[Organism] = []
+        if len(self.dataStore.organisms) == 0:
+            # Catch for when all rats have died
+            return []
         last_id: int = self.dataStore.organisms[-1].id
         for org in self.dataStore.organisms:
             if org.sex.name == "female" and org.breedingTerm != -1:
