@@ -2,6 +2,9 @@
 # See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
+orbs:
+  win: circleci/windows@4.1.1 # The Windows orb gives you everything you need to start using the Windows executor
+
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
@@ -18,14 +21,12 @@ jobs:
       - run: ./install.sh
       # Building
       - run: ./build.sh
-      - run: mv build/dist/main build/
+      - run: mv build/dist/main build/simulation-linux
       - run: ls build/
 
   # Just mostly duplicate code, deal with it, this is a hack
   windows-executable-gen:
-    machine: # executor type
-      image: windows-default
-    resource_class: windows.medium
+    executor: win/server-2022 # use one of the executors defined within the windows orb
     steps:
       # Commands are run in a Windows virtual machine environment
       # Setup
@@ -42,7 +43,7 @@ jobs:
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  sample: # This is the name of the workflow, feel free to change it to better match your workflow.
+  executable-gen: # This is the name of the workflow, feel free to change it to better match your workflow.
     # Inside the workflow, you define the jobs you want to run.
     jobs:
       - linux-executable-gen
