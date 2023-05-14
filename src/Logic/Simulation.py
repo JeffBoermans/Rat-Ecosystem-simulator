@@ -151,7 +151,6 @@ class Simulation(object):
             if org.should_die_naturally():
                 log.append(f"{org.name} {org.id} died at age {org.age}.")
                 print(str(org.id) + " died.")
-                org.alive = False
                 self.dataStore.death_organisms.append(org)
             else:
                 updated_organisms.append(org)
@@ -161,5 +160,4 @@ class Simulation(object):
     def _nextday(self):
         self._sim_day += 1
         for org in self.dataStore.organisms:
-            if org.alive:
-                org.age += 1
+            org.age += 1
