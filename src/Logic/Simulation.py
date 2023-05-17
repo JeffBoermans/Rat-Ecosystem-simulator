@@ -23,6 +23,12 @@ class Simulation(object):
         # periodically to cull the entity populations
         self.mortality_extensions: List[SimulationMortalityExtension] = []
 
+    def _load(self):
+        """Populate the simulation from an input file.
+        """
+        loader: SimulationDataLoader = SimulationDataLoader()
+        loader.load(self.dataStore, self.dataStore.session_path)
+
     def run(self, days: int = 0):
         """Run the simulation.
         This is the entry point of the simulation.
@@ -66,11 +72,30 @@ class Simulation(object):
     def day(self):
         return self._sim_day
 
-    def _load(self):
-        """Populate the simulation from an input file.
+    def kill(self, amount: int):
+        """ Kill given amount of randomly chosen organisms
         """
-        loader: SimulationDataLoader = SimulationDataLoader()
-        loader.load(self.dataStore, self.dataStore.session_path)
+        if amount < 0:
+            # Protect against negative amounts
+            return
+        killed = 0
+        while killed != amount:
+            # A random organism is chosen every time
+            # This is done in a while loop with an increment at the end
+            # to make sure the right amount of organisms are killed
+            index = random.randrange(self.organism_alive_count())
+            organism = self.dataStore.organisms[index]
+            if organism is None:
+                # Continue here because this is not a valid organism
+                # We do not want to increment the counter
+                continue
+            # Organism is moved to the death list. Location in alive
+            # list is set to None to avoid a lot of calculations.
+            # The alive list can be cleaned in a later step.
+            self.dataStore.death_organisms.append(organism)
+            self.dataStore.organisms[index] = None
+            # Increment amount killed
+            killed += 1
 
     def simulate(self):
         """ Simulate a day in the current ecosystem.
@@ -85,6 +110,8 @@ class Simulation(object):
     def _reproduction(self):
         # First: Put Females into Menopause
         for org in self.dataStore.organisms:
+            if org is None:
+                continue
             if org.sex.name == "female" and org.fertile:
                 if org.should_enter_menopause():
                     org.fertile = False
@@ -92,6 +119,8 @@ class Simulation(object):
         # Second: Check for 1 sexually mature Male
         smm_flag: bool = False
         for org in self.dataStore.organisms:
+            if org is None:
+                continue
             if org.sex.name == "male" and org.age >= org.organismInfo.maturity:
                 smm_flag = True
         if not smm_flag:
@@ -99,6 +128,8 @@ class Simulation(object):
 
         # Third: Impregnate all sexually mature Females
         for org in self.dataStore.organisms:
+            if org is None:
+                continue
             if org.sex.name == "female" and org.breedingTerm == -1 and \
                     org.organismInfo.maturity <= org.age and org.fertile:
                 # Female gets impregnated
@@ -121,6 +152,8 @@ class Simulation(object):
             return []
         last_id: int = self.dataStore.organisms[-1].id
         for org in self.dataStore.organisms:
+            if org is None:
+                continue
             if org.sex.name == "female" and org.breedingTerm != -1:
                 days_pregnant: int = org.age - org.breedingTerm
                 breeding_time: int = org.organismInfo.breeding
@@ -148,6 +181,8 @@ class Simulation(object):
         log = []
         updated_organisms = []
         for org in self.dataStore.organisms:
+            if org is None:
+                continue
             if org.should_die_naturally():
                 log.append(f"{org.name} {org.id} died at age {org.age}.")
                 print(str(org.id) + " died.")
@@ -160,4 +195,6 @@ class Simulation(object):
     def _nextday(self):
         self._sim_day += 1
         for org in self.dataStore.organisms:
+            if org is None:
+                continue
             org.age += 1
