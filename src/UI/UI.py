@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 import dearpygui_ext.logger as logger
-import time
+import time, random
 
 from ..Logic.Simulation import Simulation
 
@@ -59,8 +59,27 @@ class UI():
             self._dpg.add_text("Number of rats died: ", tag="r_dead")
             self._dpg.add_text("Number of random occurences happened: ")
         self._dpg.set_item_pos(data_window, [350, 0])
-        # Logging example
-        # self.logger.log("Rat 1 starved to death")
+        with self._dpg.window(label = "Control box", width = 350, height=350) as control_box:
+            self._dpg.add_text("Control the simulation while running")
+            self._dpg.add_text("====================================")
+            self._dpg.add_text("Random Purge")
+            self._dpg.add_text("Select a min and max value")
+            with self._dpg.group(horizontal=True):
+                self._dpg.add_input_int(
+                    label="", min_value=1, min_clamped=True, default_value=1, tag="min_val", width=100)
+                self._dpg.add_input_int(
+                    label="", min_value=2, min_clamped=True, default_value=2, tag="max_val", width=100
+                )
+                self._dpg.add_button(label="KILL", callback=self.purge)
+            self._dpg.add_text("=============================")
+            with self._dpg.group(horizontal = True):
+                self._dpg.add_button(label="Start Fire")
+                self._dpg.add_button(label="End Fire")
+            self._dpg.add_text("=============================")
+            with self._dpg.group(horizontal=True):
+                self._dpg.add_button(label="Insert Virus")
+                self._dpg.add_button(label="Kill virus")
+        self._dpg.set_item_pos(control_box, [350,350])
 
     def fileCallback(self, app_data, sender):
         self._dpg.set_value(
@@ -79,7 +98,7 @@ class UI():
             self._dpg.add_text(
                 "One tick is equal to one day in the simulation")
             self._dpg.add_input_int(
-                label="Ticks per second", min_value=1, min_clamped=True, default_value=1, tag="i_tick")
+                label="Ticks per second", min_value=1, min_clamped=True, default_value=1, tag="i_tick", width=100)
             self._dpg.add_text("=================")
             self._dpg.add_text("Add a session file (.json)")
             self._dpg.add_text("-----------------")
@@ -102,6 +121,19 @@ class UI():
     def start(self):
         self.paused = False
 
+    def purge(self):
+        min_val: int = self._dpg.get_value("min_val")
+        print(f"MIN VAL: {min_val}")
+        max_val: int = self._dpg.get_value("max_val")
+        print(f"MIN VAL: {max_val}")
+
+        if min_val >= max_val:
+            #TODO: Maybe error message display?
+            pass
+        else:
+            #TODO: function in simulation.py
+            pass
+        
     def run(self):
         while self._dpg.is_dearpygui_running():
             dpg.render_dearpygui_frame()
