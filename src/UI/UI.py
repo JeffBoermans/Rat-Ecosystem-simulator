@@ -1,6 +1,8 @@
+import random
+import time
+
 import dearpygui.dearpygui as dpg
 import dearpygui_ext.logger as logger
-import time, random
 
 from ..Logic.Simulation import Simulation
 
@@ -59,7 +61,7 @@ class UI():
             self._dpg.add_text("Number of rats died: ", tag="r_dead")
             self._dpg.add_text("Number of random occurences happened: ")
         self._dpg.set_item_pos(data_window, [350, 0])
-        with self._dpg.window(label = "Control box", width = 350, height=350) as control_box:
+        with self._dpg.window(label="Control box", width=350, height=350) as control_box:
             self._dpg.add_text("Control the simulation while running")
             self._dpg.add_text("====================================")
             self._dpg.add_text("Random Purge")
@@ -72,14 +74,14 @@ class UI():
                 )
                 self._dpg.add_button(label="KILL", callback=self.purge)
             self._dpg.add_text("=============================")
-            with self._dpg.group(horizontal = True):
+            with self._dpg.group(horizontal=True):
                 self._dpg.add_button(label="Start Fire")
                 self._dpg.add_button(label="End Fire")
             self._dpg.add_text("=============================")
             with self._dpg.group(horizontal=True):
                 self._dpg.add_button(label="Insert Virus")
                 self._dpg.add_button(label="Kill virus")
-        self._dpg.set_item_pos(control_box, [350,350])
+        self._dpg.set_item_pos(control_box, [350, 350])
 
     def fileCallback(self, app_data, sender):
         self._dpg.set_value(
@@ -126,14 +128,14 @@ class UI():
         print(f"MIN VAL: {min_val}")
         max_val: int = self._dpg.get_value("max_val")
         print(f"MIN VAL: {max_val}")
+        rand_val = random.randint(min_val, max_val)
 
         if min_val >= max_val:
-            #TODO: Maybe error message display?
+            # TODO: Maybe error message display?
             pass
-        else:
-            #TODO: function in simulation.py
-            pass
-        
+        elif self.simulation is not None:
+            self.simulation.kill(rand_val)
+
     def run(self):
         while self._dpg.is_dearpygui_running():
             dpg.render_dearpygui_frame()
