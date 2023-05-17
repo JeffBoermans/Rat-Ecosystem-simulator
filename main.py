@@ -1,7 +1,7 @@
 import dearpygui.dearpygui as dpg
 from src.UI.UI import UI
 
-
+#Test push for circleCI
 def main():
     """The main entrypoint of the simulation application.
     """
