@@ -55,8 +55,8 @@ class SimulationDataLoader(object):
             try:
                 if data_organism_info is None:
                     data_organism_info = OrganismInfo(
-                        o_m = 8 * int(organism_info[0][name]["sexual-maturity-weeks"]),
-                        o_b = 8 * int(organism_info[0][name]["breeding-age-weeks"]),
+                        o_m = 7 * int(organism_info[0][name]["sexual-maturity-weeks"]),
+                        o_b = 7 * int(organism_info[0][name]["breeding-age-weeks"]),
                         o_ls = organism_info[0][name]["life-span-months"],
                         o_mpa = organism_info[0][name]["menopause-age-months"]
                     )
@@ -76,6 +76,10 @@ class SimulationDataLoader(object):
             e_id += 1
         v_id = 0
         for vegetation in data['vegetation']:
+            assert "name" in vegetation, "Vegetation missing required key: name"
+            assert "age" in vegetation, "Vegetation missing required key: age"
+            assert "amount" in vegetation, "Vegetation missing required key: amount"
+
             if vegetation["name"] in organisms:
                 raise InputException(f"{input_path}: Vegetation detected as prey in the food-chain!")
             if vegetation["name"] in vegetations:
@@ -87,4 +91,3 @@ class SimulationDataLoader(object):
         if len(vegetations) != 0:
             raise InputException(f"{input_path}: Uninitialized vegetation detected in food-chain!")
         datastore.foodChain = food_chain_preys
-        a = 3

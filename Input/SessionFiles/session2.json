@@ -24,11 +24,13 @@
   "vegetation": [
     {
       "name": "Corn",
-      "age": 1
+      "age": 1,
+      "amount": 12
     },
     {
       "name": "Corn",
-      "age": 1
+      "age": 1,
+      "amount": 7
     }
   ]
 }
