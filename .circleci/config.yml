@@ -8,11 +8,6 @@ orbs:
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-#  deploy-job:
-#    steps:
-#      - add_ssh_keys:
-#          fingerprints:
-#              - "SHA256:8raX7FFHrWD1cqIrDWt3XCHssbuAWaSWjMbpNuEAt8A jeffboermans1@gmail.com"
   linux-executable-gen:
     resource_class: small
     docker:
@@ -63,9 +58,13 @@ jobs:
       # Import executables from previous jobs
       - attach_workspace:
           at: .
+      # Add deploy key
+      - add_ssh_keys:
+          fingerprints:
+              - "8b:de:a4:0e:4e:26:81:e6:0d:5e:da:95:54:af:12:2c"
       # Push resulting executable back to repo
-      - run: git config user.email "thomas.gueutal@student.uantwerpen.be"
-      - run: git config user.name "Thomas Gueutal"
+      - run: git config user.email "jeffboermans1@gmail.com"
+      - run: git config user.name "Jeff Boermans"
       - run: git add build/simulation-linux
       - run: git add build/simulation-windows.exe
       - run: git commit -m "[skip ci] Rebuild executables."
