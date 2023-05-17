@@ -2,7 +2,7 @@ import json
 
 from ..Logic.DataStore import DataStore
 from ..Logic.Entities.organism import Organism, OrganismInfo, OrganismSexesEnum
-from ..Logic.Entities.vegetation import Vegetation
+from ..Logic.Entities.vegetation import AnnualVegetationCluster, Vegetation
 from .exceptions import InputException, MissingInputKey, WrongInputFile
 
 
@@ -23,71 +23,96 @@ class SimulationDataLoader(object):
 
 
         # Setup
-        f = open(input_path, "r")
-        data = json.load(f)
+        with open(input_path, "r") as f:
+            data = json.load(f)
 
-        # Input Validation; check if the input file is valid
-        required_keys = ['organisms', 'vegetation', 'food-chain-preys']
-        missing_key: str | None = next((req_key for req_key in required_keys if req_key not in data), None)
-        if missing_key is not None:
-            raise MissingInputKey(f"{input_path}: A required top-level key is missing from the session file: {missing_key}")
+            # Input Validation; check if the input file is valid
+            required_keys = ['organisms', 'vegetation', 'food-chain-preys', 'organism-characteristics', 'vegetation-characteristics']
+            missing_key: str | None = next((req_key for req_key in required_keys if req_key not in data), None)
+            if missing_key is not None:
+                raise MissingInputKey(f"{input_path}: A required top-level key is missing from the session file: {missing_key}")
 
-        try:
-            food_chain_preys = data["food-chain-preys"]
-        except KeyError:
-            raise InputException("No food-chain  was specified!")
-        try:
-            organism_info = data["organism-characteristics"]
-        except KeyError:
-            raise InputException("No organism characteristics were specified!")
-        data_organism_info = None
+            food_chain_preys = data.get("food-chain-preys", None)
+            organism_info: dict = data.get("organism-characteristics", None)
+            vegetation_info: dict = data.get("vegetation-characteristics", None)
 
-        # All keys are organisms, All non-keys are vegetation
-        organisms = [entity_name for entity_name in food_chain_preys]
-        vegetations = []
+            assert isinstance(food_chain_preys, dict), "The food chain preys key must have a dictionary value"
+            assert isinstance(organism_info, dict), "The organism characteristics key must have a dictionary value"
+            assert isinstance(vegetation_info, dict), "The vegetation characteristics key must have a dictionary value"
 
-        # Populate Data Store
-        allowed_sexes_values = OrganismSexesEnum.values()
-        for e_id, organism in enumerate(data['organisms']):
-            name = organism["name"]
-            if name in organisms:
-                organisms.remove(name)
+            organism_info_mapping = dict()
             try:
-                if data_organism_info is None:
-                    data_organism_info = OrganismInfo(
-                        o_m = 7 * int(organism_info[0][name]["sexual-maturity-weeks"]),
-                        o_b = 7 * int(organism_info[0][name]["breeding-age-weeks"]),
-                        o_ls = organism_info[0][name]["life-span-months"],
-                        o_mpa = organism_info[0][name]["menopause-age-months"]
+                organism_info_mapping = {
+                    organism_name : OrganismInfo(
+                            o_m = 7 * int(organism_info[organism_name]["sexual-maturity-weeks"]),
+                            o_b = 7 * int(organism_info[organism_name]["breeding-age-weeks"]),
+                            o_ls = organism_info[organism_name]["life-span-months"],
+                            o_mpa = organism_info[organism_name]["menopause-age-months"]
                     )
-                for item in food_chain_preys[name]:
-                    if item not in vegetations:
-                        vegetations.append(item)
-                assert isinstance(name, str)
-                assert isinstance(organism["age"], int)
-                assert len(organism["sex"]) == 1 #Check if char
-                assert organism["sex"] in allowed_sexes_values, f"Unknown sex value: {organism['sex']}"
-            except KeyError:
-                raise InputException(f"{input_path}: Wrong typing used when specifying an organism!")
-            except AssertionError as e:
-                raise InputException(f"{input_path}: A '{organism['name']}' was not configured correctly: {e}")
-            datastore.organisms.append(Organism(organism["name"], organism["age"], e_id, OrganismSexesEnum(organism["sex"]),
-                                                data_organism_info))
-            e_id += 1
-        v_id = 0
-        for vegetation in data['vegetation']:
-            assert "name" in vegetation, "Vegetation missing required key: name"
-            assert "age" in vegetation, "Vegetation missing required key: age"
-            assert "amount" in vegetation, "Vegetation missing required key: amount"
+                    for organism_name in organism_info.keys()
+                }
+            except KeyError as e:
+                raise MissingInputKey(f"Malformed organism info entry: {e}")
 
-            if vegetation["name"] in organisms:
-                raise InputException(f"{input_path}: Vegetation detected as prey in the food-chain!")
-            if vegetation["name"] in vegetations:
-                vegetations.remove(vegetation["name"])
-            datastore.vegetation.append(Vegetation(vegetation["name"], vegetation["age"], v_id))
-            v_id += 1
-        if len(organisms) != 0:
-            raise InputException(f"{input_path}: Uninitialized organism detected in the food-chain!")
-        if len(vegetations) != 0:
-            raise InputException(f"{input_path}: Uninitialized vegetation detected in food-chain!")
-        datastore.foodChain = food_chain_preys
+            # All keys are organisms, All non-keys are vegetation
+            organisms = [entity_name for entity_name in food_chain_preys]
+            vegetations = []
+
+            # Populate Data Store
+            allowed_sexes_values = OrganismSexesEnum.values()
+            for organism in data['organisms']:
+
+                name = organism["name"]
+                data_organism_info = organism_info_mapping[name]
+                if name in organisms:
+                    organisms.remove(name)
+                try:
+                    for item in food_chain_preys[name]:
+                        if item not in vegetations:
+                            vegetations.append(item)
+                    assert isinstance(name, str)
+                    assert isinstance(organism["age"], int)
+                    assert len(organism["sex"]) == 1 #Check if char
+                    assert organism["sex"] in allowed_sexes_values, f"Unknown sex value: {organism['sex']}"
+
+                except KeyError:
+                    raise InputException(f"{input_path}: Wrong typing used when specifying an organism!")
+                except AssertionError as e:
+                    raise InputException(f"{input_path}: A '{organism['name']}' was not configured correctly: {e}")
+
+                e_id = datastore.reserve_organism_id()
+                datastore.organisms.append(Organism(organism["name"], organism["age"], e_id, OrganismSexesEnum(organism["sex"]),
+                                                    data_organism_info))
+
+            for vegetation in data['vegetation']:
+                vegetation_name = vegetation["name"]
+                try:
+                    assert "name" in vegetation, "name"
+                    assert "age" in vegetation, "age"
+                    assert "amount" in vegetation, "amount"
+                except AssertionError as e:
+                    raise MissingInputKey(f"Missing required vegetation key: {e}")
+
+                if vegetation_name in organisms:
+                    raise InputException(f"{input_path}: Vegetation detected as prey in the food-chain!")
+                if vegetation_name in vegetations:
+                    vegetations.remove(vegetation["name"])
+                
+                vegetation_info = vegetation_info[vegetation_name]
+
+                vegetation_cluster = AnnualVegetationCluster(
+                    species=vegetation_name,
+                    age=vegetation["age"],
+                    amount=vegetation["amount"],
+                    energy_yield=vegetation_info["energy-yield"],
+                    maturity_age_range=vegetation_info["maturity-age-days"],
+                    id=datastore.reserve_vegetation_id()
+                )
+                datastore.vegetation.append(vegetation_cluster)
+
+            if len(organisms) != 0:
+                raise InputException(f"{input_path}: Uninitialized organism detected in the food-chain: {organisms}")
+            if len(vegetations) != 0:
+                raise InputException(f"{input_path}: Uninitialized vegetation detected in food-chain: {vegetations}")
+
+            datastore.foodChain = food_chain_preys

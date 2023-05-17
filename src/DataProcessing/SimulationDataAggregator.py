@@ -39,8 +39,9 @@ class SimulationDataAggregator(object):
         populations: Dict[str: int] = dict()
 
         # Aggregate output
-        for vegetaion in datastore.vegetation:
-            populations[vegetaion.name] = populations.get(vegetaion.name, 0) + 1
+        for vegetation_cluster in datastore.vegetation:
+            species, population = vegetation_cluster.population()
+            populations[species] = populations.get(species, 0) + population
 
         # Prepare output
         output_json["populations"] = populations
