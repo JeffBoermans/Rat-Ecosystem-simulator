@@ -1,19 +1,30 @@
 import random
 import time
 
+from typing import List
+
 import dearpygui.dearpygui as dpg
 import dearpygui_ext.logger as logger
 
 from ..Logic.Simulation import Simulation
+from ..Logic.Extensions.SimulationExtension import SimulationExtension, SimulationMortalityExtension
+from .Extensions.SimulationExtensionUI import SimulationExtensionUI
 
 
 class UI():
-    def __init__(self, _dpg) -> None:
+    def __init__(self, _dpg: dpg, extensions: List[SimulationExtensionUI]=None) -> None:
+        if extensions is None:
+            extensions = []
+        for extension in extensions:
+            if not (isinstance(extension, SimulationExtension) and isinstance(extension, SimulationExtensionUI)):
+                raise RuntimeError(f"All extensions must be instances of both the {SimulationExtension.__name__} class and the {SimulationExtensionUI.__name__} class")
+
+
         self.data_x = [0.0]
         self.data_y = [0.0]
         self.x_axis = None
         self.y_axis = None
-        self._dpg = _dpg
+        self._dpg: dpg = _dpg
         self.sec_tick = 0
 
         self.paused = True
@@ -21,6 +32,8 @@ class UI():
 
         self.logger = None
         self.simulation = None
+
+        self.extensions: List[SimulationExtensionUI] = extensions
 
     def runSimulation(self, sender, callback):
         if self._dpg.get_value("file_selected") == "":
@@ -31,6 +44,9 @@ class UI():
         self.sec_tick = self._dpg.get_value("i_tick")
 
         self.simulation = Simulation(self._dpg.get_value("file_selected"))
+        for extension in self.extensions:
+            if isinstance(extension, SimulationMortalityExtension):
+                self.simulation.register_mortality_extension(extension)
         self.data_y[0] = self.simulation.organism_alive_count()
 
         print(f"Number of rats: {self.simulation.organism_alive_count()}")
@@ -83,6 +99,9 @@ class UI():
                 self._dpg.add_button(label="Kill virus")
         self._dpg.set_item_pos(control_box, [350, 350])
 
+        for extension in self.extensions:
+            extension.add_ui_elements(self)
+
     def fileCallback(self, app_data, sender):
         self._dpg.set_value(
             "file_selected", f"{sender['selections'][sender['file_name']]}")
@@ -90,7 +109,7 @@ class UI():
     def setUpSimulation(self):
         self._dpg.create_context()
         self._dpg.create_viewport(
-            title='Simulation Configuration', width=700, height=700)
+            title='Simulation Configuration', width=1050, height=700)
         with self._dpg.window(label="Window", tag="primary"):
             self._dpg.add_text("Random occurences")
             self._dpg.add_text("=================")
@@ -170,3 +189,6 @@ class UI():
             'series_tag', [list(self.data_x), list(self.data_y)])
         dpg.fit_axis_data('x_axis')
         dpg.fit_axis_data('y_axis')
+
+        for extension in self.extensions:
+            extension.update_ui_elements(self)
