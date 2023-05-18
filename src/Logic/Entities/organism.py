@@ -58,3 +58,6 @@ class Organism(Entity):
         prob_of_having_reached_menopause = self.menopause_dist.cdf(self.age)
         # The random.random function draws form a normally distributed range [0, 1]
         return random.random() < prob_of_having_reached_menopause
+
+    def __repr__(self) -> str:
+        return f"{self.name} | {self.age} Age | {self.sex} Sex | {self.id} ID"
