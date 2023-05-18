@@ -35,10 +35,13 @@ class UI():
 
         self.extensions: List[SimulationExtensionUI] = extensions
 
-    def runSimulation(self, sender, callback):
+    def _setup_simulation(self, sender, callback):
         if self._dpg.get_value("file_selected") == "":
+            # Check that a file has been selected, else abort setup
+            dpg.show_item("warn_select_file")
             print("No file selected")
             return
+
         b_fires = self._dpg.get_value("b_fires")
         b_virus = self._dpg.get_value("b_virus")
         self.sec_tick = self._dpg.get_value("i_tick")
@@ -49,10 +52,11 @@ class UI():
                 self.simulation.register_mortality_extension(extension)
         self.data_y[0] = self.simulation.organism_alive_count()
 
-        print(f"Number of rats: {self.simulation.organism_alive_count()}")
-        print(f"Random Fires: {b_fires}")
-        print(f"Random Viruses: {b_virus}")
-        print(f"Ticks per second: {self.sec_tick}")
+        self.simulation._externalLog(
+            f"Number of rats: {self.simulation.organism_alive_count()}\n")
+        self.simulation._externalLog(f"Random Fires: {b_fires}\n")
+        self.simulation._externalLog(f"Random Viruses: {b_virus}\n")
+        self.simulation._externalLog(f"Ticks per second: {self.sec_tick}\n")
         self.logger = logger.mvLogger(self._dpg.add_window(
             label="mvLogger", pos=(0, 350), width=350, height=350))
         with self._dpg.window(label="Simulation Window", width=350, height=350) as plot_window:
@@ -66,7 +70,7 @@ class UI():
                     self._dpg.mvXAxis, label='x', tag='x_axis')
                 self.y_axis = self._dpg.add_plot_axis(
                     self._dpg.mvYAxis, label='y', tag='y_axis')
-            self._dpg.add_line_series(x=list(self.data_x), y=list(self.data_y),
+            self._dpg.add_line_series(x=self.data_x, y=self.data_y,
                                       label="Label", parent="y_axis",
                                       tag="series_tag")
         self._dpg.set_item_pos(plot_window, [0, 0])
@@ -102,36 +106,47 @@ class UI():
         for extension in self.extensions:
             extension.add_ui_elements(self)
 
-    def fileCallback(self, app_data, sender):
+    def _file_selected(self, app_data, sender):
+        dpg.hide_item("warn_select_file")
         self._dpg.set_value(
             "file_selected", f"{sender['selections'][sender['file_name']]}")
 
-    def setUpSimulation(self):
+    def setup_main_window(self):
         self._dpg.create_context()
         self._dpg.create_viewport(
-            title='Simulation Configuration', width=1050, height=700)
+            title='Simulation', width=1050, height=700)
+
         with self._dpg.window(label="Window", tag="primary"):
-            self._dpg.add_text("Random occurences")
+            # Enable random occurrences in the simulation
+            self._dpg.add_text("Random occurrences")
             self._dpg.add_text("=================")
             self._dpg.add_checkbox(label="Wildfires", tag="b_fires")
             self._dpg.add_checkbox(label="Viruses", tag="b_virus")
+            # Set simulation time steps
             self._dpg.add_text("=================")
             self._dpg.add_text(
                 "One tick is equal to one day in the simulation")
             self._dpg.add_input_int(
-                label="Ticks per second", min_value=1, min_clamped=True, default_value=1, tag="i_tick", width=100)
+                label="Ticks per second", min_value=1, min_clamped=True, default_value=30, tag="i_tick", width=100)
+            # Select session file
             self._dpg.add_text("=================")
             self._dpg.add_text("Add a session file (.json)")
             self._dpg.add_text("-----------------")
             with self._dpg.file_dialog(directory_selector=False, show=False, id="file_dialog_id", width=700, height=400,
-                                       callback=self.fileCallback):
+                                       callback=self._file_selected):
                 self._dpg.add_file_extension(".json")
-            self._dpg.add_button(
-                label="File Selector", callback=lambda: dpg.show_item("file_dialog_id"))
+            with dpg.group(horizontal=True):
+                self._dpg.add_button(
+                    label="File Selector", callback=lambda: dpg.show_item("file_dialog_id"))
+                # Warning when no file is selected
+                self._dpg.add_text("Please select a session file.", show=False,
+                                   id="warn_select_file", color=(230, 50, 40))
             self._dpg.add_text("", tag="file_selected")
             self._dpg.add_text("=================")
-            self._dpg.add_button(label="Start Simulation",
-                                 callback=self.runSimulation)
+            # Start
+            self._dpg.add_button(label="Load Simulation",
+                                 callback=self._setup_simulation)
+
         self._dpg.setup_dearpygui()
         self._dpg.show_viewport()
         self._dpg.set_primary_window("primary", True)
@@ -144,11 +159,8 @@ class UI():
 
     def purge(self):
         min_val: int = self._dpg.get_value("min_val")
-        print(f"MIN VAL: {min_val}")
         max_val: int = self._dpg.get_value("max_val")
-        print(f"MIN VAL: {max_val}")
         rand_val = random.randint(min_val, max_val)
-
         if min_val >= max_val:
             # TODO: Maybe error message display?
             pass
@@ -161,34 +173,40 @@ class UI():
             if not self.paused:
                 cur_time = time.time()
                 elapsed = cur_time - self.prev_update
-                # print(elapsed)
                 if elapsed >= 1/self.sec_tick:
-                    self.update_data()
+                    self.advance_simulation()
                     self.prev_update = cur_time
+            self.update_data()
         self._dpg.destroy_context()
 
     def update_data(self):
         if self.simulation is None:
             return
+        cur_sim_day = self.simulation.day()
+        alive = self.simulation.organism_alive_count()
+        dead = self.simulation.organism_dead_count()
         self._dpg.set_value(
-            "updatectr", f"Time steps processed: {self.simulation.day()}")
-        # Advance the time in the simulation
-        logs, alive, dead = self.simulation.simulate()
+            "updatectr", f"Time steps processed: {cur_sim_day}")
         # Get new data from the simulation. Note we need both x and y values
         # if we want a meaningful axis unit.
-        self.data_x.append(self.simulation.day())
-        self.data_y.append(self.simulation.organism_alive_count())
+        self.data_x.append(cur_sim_day)
+        self.data_y.append(alive)
         self._dpg.set_value("r_alive", f"Number of rats alive: {alive}")
         self._dpg.set_value("r_dead", f"Number of rats died: {dead}")
 
-        for log in logs:
-            self.logger.log(log)
-
         # set the series x and y to the last nsamples
         self._dpg.set_value(
-            'series_tag', [list(self.data_x), list(self.data_y)])
+            'series_tag', [self.data_x, self.data_y])
         dpg.fit_axis_data('x_axis')
         dpg.fit_axis_data('y_axis')
 
         for extension in self.extensions:
             extension.update_ui_elements(self)
+
+    def advance_simulation(self):
+        if self.simulation is None:
+            return
+        logs, _, _ = self.simulation.simulate()
+
+        for log in logs:
+            self.logger.log(log)
