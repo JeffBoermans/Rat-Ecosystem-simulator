@@ -5,9 +5,9 @@ from src.UI.UI import UI
 def main():
     """The main entrypoint of the simulation application.
     """
-    plot = UI(dpg)
-    plot.setup_main_window()
-    plot.run()
+    sim = UI(dpg)
+    sim.setUpSimulation()
+    sim.run()
 
 
 if __name__ == '__main__':

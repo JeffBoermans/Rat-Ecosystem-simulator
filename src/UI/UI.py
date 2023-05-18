@@ -36,10 +36,11 @@ class UI():
         self.simulation = Simulation(self._dpg.get_value("file_selected"))
         self.data_y[0] = self.simulation.organism_alive_count()
 
-        print(f"Number of rats: {self.simulation.organism_alive_count()}")
-        print(f"Random Fires: {b_fires}")
-        print(f"Random Viruses: {b_virus}")
-        print(f"Ticks per second: {self.sec_tick}")
+        self.simulation._externalLog(
+            f"Number of rats: {self.simulation.organism_alive_count()}\n")
+        self.simulation._externalLog(f"Random Fires: {b_fires}\n")
+        self.simulation._externalLog(f"Random Viruses: {b_virus}\n")
+        self.simulation._externalLog(f"Ticks per second: {self.sec_tick}\n")
         self.logger = logger.mvLogger(self._dpg.add_window(
             label="mvLogger", pos=(0, 350), width=350, height=350))
         with self._dpg.window(label="Simulation Window", width=350, height=350) as plot_window:
@@ -107,8 +108,8 @@ class UI():
             self._dpg.add_text(
                 "One tick is equal to one day in the simulation")
             self._dpg.add_input_int(
-                label="Ticks per second", min_value=1, min_clamped=True, default_value=1, tag="i_tick", width=100)
-            # Select simulation start file
+                label="Ticks per second", min_value=1, min_clamped=True, default_value=30, tag="i_tick", width=100)
+            # Select session file
             self._dpg.add_text("=================")
             self._dpg.add_text("Add a session file (.json)")
             self._dpg.add_text("-----------------")
@@ -139,11 +140,8 @@ class UI():
 
     def purge(self):
         min_val: int = self._dpg.get_value("min_val")
-        print(f"MIN VAL: {min_val}")
         max_val: int = self._dpg.get_value("max_val")
-        print(f"MIN VAL: {max_val}")
         rand_val = random.randint(min_val, max_val)
-
         if min_val >= max_val:
             # TODO: Maybe error message display?
             pass
@@ -156,7 +154,6 @@ class UI():
             if not self.paused:
                 cur_time = time.time()
                 elapsed = cur_time - self.prev_update
-                # print(elapsed)
                 if elapsed >= 1/self.sec_tick:
                     self.advance_simulation()
                     self.prev_update = cur_time
