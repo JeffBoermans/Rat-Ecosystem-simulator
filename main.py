@@ -6,7 +6,7 @@ def main():
     """The main entrypoint of the simulation application.
     """
     sim = UI(dpg)
-    sim.setUpSimulation()
+    sim.setup_main_window()
     sim.run()
 
 
