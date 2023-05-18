@@ -33,23 +33,23 @@ class SimulationDataLoader(object):
                 raise MissingInputKey(f"{input_path}: A required top-level key is missing from the session file: {missing_key}")
 
             food_chain_preys = data.get("food-chain-preys", None)
-            organism_info: dict = data.get("organism-characteristics", None)
-            vegetation_info: dict = data.get("vegetation-characteristics", None)
+            organism_characteristics: dict = data.get("organism-characteristics", None)
+            vegetation_characteristics: dict = data.get("vegetation-characteristics", None)
 
             assert isinstance(food_chain_preys, dict), "The food chain preys key must have a dictionary value"
-            assert isinstance(organism_info, dict), "The organism characteristics key must have a dictionary value"
-            assert isinstance(vegetation_info, dict), "The vegetation characteristics key must have a dictionary value"
+            assert isinstance(organism_characteristics, dict), "The organism characteristics key must have a dictionary value"
+            assert isinstance(vegetation_characteristics, dict), "The vegetation characteristics key must have a dictionary value"
 
             organism_info_mapping = dict()
             try:
                 organism_info_mapping = {
                     organism_name : OrganismInfo(
-                            o_m = 7 * int(organism_info[organism_name]["sexual-maturity-weeks"]),
-                            o_b = 7 * int(organism_info[organism_name]["breeding-age-weeks"]),
-                            o_ls = organism_info[organism_name]["life-span-months"],
-                            o_mpa = organism_info[organism_name]["menopause-age-months"]
+                            o_m = 7 * int(organism_characteristics[organism_name]["sexual-maturity-weeks"]),
+                            o_b = 7 * int(organism_characteristics[organism_name]["breeding-age-weeks"]),
+                            o_ls = organism_characteristics[organism_name]["life-span-months"],
+                            o_mpa = organism_characteristics[organism_name]["menopause-age-months"]
                     )
-                    for organism_name in organism_info.keys()
+                    for organism_name in organism_characteristics.keys()
                 }
             except KeyError as e:
                 raise MissingInputKey(f"Malformed organism info entry: {e}")
@@ -98,7 +98,7 @@ class SimulationDataLoader(object):
                 if vegetation_name in vegetations:
                     vegetations.remove(vegetation["name"])
                 
-                vegetation_info = vegetation_info[vegetation_name]
+                vegetation_info = vegetation_characteristics[vegetation_name]
 
                 vegetation_cluster = AnnualVegetationCluster(
                     species=vegetation_name,
