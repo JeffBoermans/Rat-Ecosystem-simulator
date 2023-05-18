@@ -6,15 +6,15 @@
   },
   "organism-characteristics": {
     "Rat": {
-      "sexual-maturity-weeks": 7,
-      "breeding-age-weeks": 8,
+      "sexual-maturity-weeks": 4,
+      "breeding-age-weeks": 5,
       "life-span-months": [30, 36],
       "menopause-age-months": [15, 18]
     }
   },
   "vegetation-characteristics": {
     "Corn": {
-      "energy-yield": 10,
+      "energy-yield": 100,
       "maturity-age-days": [70, 100]
     }
   },
@@ -33,13 +33,58 @@
       "name": "Rat",
       "age" : 1,
       "sex" : "m"
+    },
+    {
+      "name": "Rat",
+      "age" : 1,
+      "sex" : "m"
+    },
+    {
+      "name": "Rat",
+      "age" : 1,
+      "sex" : "m"
     }
   ],
   "vegetation": [
     {
       "name": "Corn",
-      "age": 1,
-      "amount": 10
+      "age": 70,
+      "amount": 100
+    },
+    {
+      "name": "Corn",
+      "age": 0,
+      "amount": 100
+    },
+    {
+      "name": "Corn",
+      "age": 150,
+      "amount": 100
+    },
+    {
+      "name": "Corn",
+      "age": 210,
+      "amount": 100
+    },
+    {
+      "name": "Corn",
+      "age": 280,
+      "amount": 100
+    },
+    {
+      "name": "Corn",
+      "age": 350,
+      "amount": 100
+    },
+    {
+      "name": "Corn",
+      "age": 20,
+      "amount": 100
+    },
+    {
+      "name": "Corn",
+      "age": 190,
+      "amount": 100
     }
   ]
 }
