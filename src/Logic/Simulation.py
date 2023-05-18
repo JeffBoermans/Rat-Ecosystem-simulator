@@ -108,6 +108,12 @@ class Simulation(object):
         return death_log + birth_log, self.organism_alive_count(), self.organism_dead_count()
 
     def _reproduction(self):
+        # Repopulate the cluster once a year
+        current_day: int = self.day()
+        for cluster in self.dataStore.vegetation:
+            cluster.repopulate(current_day)
+
+
         # First: Put Females into Menopause
         for org in self.dataStore.organisms:
             if org is None:
@@ -177,6 +183,10 @@ class Simulation(object):
             self.dataStore.organisms.append(baby)
         return log
 
+    def _notify_extensions_of_death(self, organism: Organism):
+        for extension in self.mortality_extensions:
+            extension.notify_organism_death(organism)
+
     def _mortality(self):
         log = []
         updated_organisms = []
@@ -187,8 +197,17 @@ class Simulation(object):
                 log.append(f"{org.name} {org.id} died at age {org.age}.")
                 print(str(org.id) + " died.")
                 self.dataStore.death_organisms.append(org)
+                self._notify_extensions_of_death(org)
             else:
+                # Let extensions also decide death per organism
+                if next((extension.should_die(org, self.dataStore, log)
+                         for extension in self.mortality_extensions), False):
+                    self.dataStore.death_organisms.append(org)
+                    self._notify_extensions_of_death(org)
+                    continue
+
                 updated_organisms.append(org)
+
         self.dataStore.organisms = updated_organisms
         return log
 
@@ -198,3 +217,10 @@ class Simulation(object):
             if org is None:
                 continue
             org.age += 1
+
+        for cluster in self.dataStore.vegetation:
+            cluster.next_day()
+            print(cluster)
+
+        for extension in self.mortality_extensions:
+            extension.next_day(self.dataStore)
