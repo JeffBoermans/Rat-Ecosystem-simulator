@@ -78,6 +78,10 @@ class Simulation(object):
         if amount < 0:
             # Protect against negative amounts
             return
+        if self.organism_alive_count() == 0:
+            # All organisms are already dead
+            return
+
         killed = 0
         while killed != amount:
             # A random organism is chosen every time
