@@ -9,6 +9,7 @@ from ..DataProcessing.exceptions import *
 from .exceptions import DuplicateExtension
 from ..Logic.Entities.organism import Organism, OrganismSexesEnum
 from .Extensions.SimulationExtension import SimulationMortalityExtension
+from ..utils import Logger
 
 
 class Simulation(object):
@@ -16,9 +17,9 @@ class Simulation(object):
         self.dataStore: DataStore = DataStore(s_path)
 
         self._sim_day = 0
+        self._logger: Logger = Logger("Output/log.txt")
 
         self._load()
-
         # The active list of mortality extensions, which are consulted
         # periodically to cull the entity populations
         self.mortality_extensions: List[SimulationMortalityExtension] = []
@@ -28,6 +29,8 @@ class Simulation(object):
         """
         loader: SimulationDataLoader = SimulationDataLoader()
         loader.load(self.dataStore, self.dataStore.session_path)
+        self._logger.setup(self.dataStore.session_path) 
+
 
     def run(self, days: int = 0):
         """Run the simulation.
@@ -36,7 +39,7 @@ class Simulation(object):
         for _ in range(days):
             self.simulate()
         self.dataStore.printOrganisms()
-        # print(self.dataStore.organisms[0].organismInfo.lifespan)
+
 
     def persist(self, output_path: str) -> None:
         """Persist the contents and results of the simulation to an output file.
@@ -78,6 +81,7 @@ class Simulation(object):
         if amount < 0:
             # Protect against negative amounts
             return
+        self._logger.log(f"Manually killed {amount} organisms")
         killed = 0
         while killed != amount:
             # A random organism is chosen every time
@@ -134,7 +138,7 @@ class Simulation(object):
                     org.organismInfo.maturity <= org.age and org.fertile:
                 # Female gets impregnated
                 org.breedingTerm = org.age
-                print("Female impregnated.")
+                self._logger.log("Female impregnated")
 
     def _int_to_sex(self, sex_int: int) -> str:
         if sex_int == 0:
@@ -161,7 +165,7 @@ class Simulation(object):
                     raise Exception("Pregnant female exceeded breeding time.")
                 elif days_pregnant == breeding_time:
                     # Birth occurs
-                    print("Birth")
+                    self._logger.log("A rat was born")
                     org.breedingTerm = -1
                     last_id += 1
                     sex_int: int = random.randint(0, 1)  # 0:male, 1:female
@@ -185,7 +189,7 @@ class Simulation(object):
                 continue
             if org.should_die_naturally():
                 log.append(f"{org.name} {org.id} died at age {org.age}.")
-                print(str(org.id) + " died.")
+                self._logger.log(str(org.id) + " Rats died.")
                 self.dataStore.death_organisms.append(org)
             else:
                 updated_organisms.append(org)
@@ -198,3 +202,8 @@ class Simulation(object):
             if org is None:
                 continue
             org.age += 1
+
+    def _externalLog(self, msg: str):
+        """ External access to logger (Just for UI purposes)
+        """
+        self._logger.logNoTimestamp(msg)
