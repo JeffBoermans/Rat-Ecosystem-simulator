@@ -16,6 +16,9 @@ class Vegetation(Entity):
         """
         super(Vegetation, self).__init__(species, age, id)
 
+    def __repr__(self) -> str:
+        return f"{self.name} | {self.age} Age | {self.id} ID"
+
 
 class MonoVegetationCluster(Vegetation):
     """A homogenous cluster of plants that follow an undefined life/growth cycle.
@@ -55,13 +58,23 @@ class MonoVegetationCluster(Vegetation):
         return foraged_energy
 
     def next_day(self) -> None:
-        """Make a single time step pass for the vegetation cluster.
+        """Make a single time step pass for the vegetation cluster."""
+        raise NotImplementedError("The derived cluster should implement this method")
+
+    def repopulate(self, day: int) -> None:
+        """Make the cluster repopulate, expanding the population of plants in the
+        cluster based on the current population.
+
+        :param day: The current day in the year in the simulation
         """
         raise NotImplementedError("The derived cluster should implement this method")
 
     def population(self) -> Tuple[str, int]:
         """Get the (species, population count) tuple for the cluster."""
         raise NotImplementedError("The derived cluster should implement this method")
+
+    def __repr__(self) -> str:
+        return f"{self._energy_amount} Energy | {self._crop_energy_yield} Yield | " + super().__repr__()
 
 
 class AnnualVegetationCluster(MonoVegetationCluster):
@@ -97,6 +110,12 @@ class AnnualVegetationCluster(MonoVegetationCluster):
         self.add_energy(matured_count * self._crop_energy_yield)
         self.immature_amount -= matured_count
 
+    def repopulate(self, day: int) -> None:
+        if (day % 365) == 0:
+            self.immature_amount = self.mature_amount
+            self.mature_amount = 0
+            self.age = 0
+
     def population(self) -> Tuple[str, int]:
         return self.name, self.mature_amount + self.immature_amount
 
@@ -116,3 +135,6 @@ class AnnualVegetationCluster(MonoVegetationCluster):
         # ==> Choose a sample from an inverse binomial distribution based on the
         #   current age of the cluster vegetation and the maturity normal distribution
         return np_random.binomial(n=self.immature_amount, p=prob_of_mature_before_age)
+
+    def __repr__(self) -> str:
+        return f"{self.mature_amount} Mature | {self.immature_amount} Immature | " + super().__repr__()
