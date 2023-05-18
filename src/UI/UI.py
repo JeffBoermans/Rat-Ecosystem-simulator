@@ -12,19 +12,17 @@ from .Extensions.SimulationExtensionUI import SimulationExtensionUI
 
 
 class UI():
-    def __init__(self, _dpg: dpg, extensions: List[SimulationExtensionUI]=None) -> None:
+    def __init__(self, _dpg: dpg, extensions: List[SimulationExtensionUI] = None) -> None:
         if extensions is None:
             extensions = []
         for extension in extensions:
             if not (isinstance(extension, SimulationExtension) and isinstance(extension, SimulationExtensionUI)):
-                raise RuntimeError(f"All extensions must be instances of both the {SimulationExtension.__name__} class and the {SimulationExtensionUI.__name__} class")
-
+                raise RuntimeError(
+                    f"All extensions must be instances of both the {SimulationExtension.__name__} class and the {SimulationExtensionUI.__name__} class")
 
         self.data_x = [0.0]
         self.data_y = [0.0]
-        self.x_axis = None
-        self.y_axis = None
-        self._dpg: dpg = _dpg
+        self._dpg = _dpg
         self.sec_tick = 0
 
         self.paused = True
@@ -35,53 +33,37 @@ class UI():
 
         self.extensions: List[SimulationExtensionUI] = extensions
 
-    def _setup_simulation(self, sender, callback):
-        if self._dpg.get_value("file_selected") == "":
-            # Check that a file has been selected, else abort setup
-            dpg.show_item("warn_select_file")
-            print("No file selected")
-            return
-
-        b_fires = self._dpg.get_value("b_fires")
-        b_virus = self._dpg.get_value("b_virus")
-        self.sec_tick = self._dpg.get_value("i_tick")
-
-        self.simulation = Simulation(self._dpg.get_value("file_selected"))
-        for extension in self.extensions:
-            if isinstance(extension, SimulationMortalityExtension):
-                self.simulation.register_mortality_extension(extension)
-        self.data_y[0] = self.simulation.organism_alive_count()
-
-        self.simulation._externalLog(
-            f"Number of rats: {self.simulation.organism_alive_count()}\n")
-        self.simulation._externalLog(f"Random Fires: {b_fires}\n")
-        self.simulation._externalLog(f"Random Viruses: {b_virus}\n")
-        self.simulation._externalLog(f"Ticks per second: {self.sec_tick}\n")
-        self.logger = logger.mvLogger(self._dpg.add_window(
-            label="mvLogger", pos=(0, 350), width=350, height=350))
-        with self._dpg.window(label="Simulation Window", width=350, height=350) as plot_window:
+    def _setup_population_graph(self):
+        window_id = "sim_population_graph"
+        with self._dpg.window(label="Population Graph", id=window_id, width=350, height=350, no_close=True):
             with dpg.group(horizontal=True):
                 self._dpg.add_button(label="Start", callback=self.start)
                 self._dpg.add_button(
                     label="Pause", callback=self.pause, tag="pause")
                 self._dpg.add_button(label="Stop")
             with dpg.plot(label='Current Organism Population', height=-1, width=-1):
-                self.x_axis = self._dpg.add_plot_axis(
+                self._dpg.add_plot_axis(
                     self._dpg.mvXAxis, label='x', tag='x_axis')
-                self.y_axis = self._dpg.add_plot_axis(
+                self._dpg.add_plot_axis(
                     self._dpg.mvYAxis, label='y', tag='y_axis')
             self._dpg.add_line_series(x=self.data_x, y=self.data_y,
                                       label="Label", parent="y_axis",
                                       tag="series_tag")
-        self._dpg.set_item_pos(plot_window, [0, 0])
-        with self._dpg.window(label="Data box", width=350, height=350) as data_window:
+        return window_id
+
+    def _setup_data_window(self):
+        window_id = "sim_data_window"
+        with self._dpg.window(label="Data box", id=window_id, width=350, height=350, no_close=True):
             self._dpg.add_text(
-                f"Ticks: {self.simulation.day()}", tag="updatectr")
+                f"Day: {self.simulation.day()}", tag="updatectr")
             self._dpg.add_text("Number of rats in existence: ", tag="r_alive")
             self._dpg.add_text("Number of rats died: ", tag="r_dead")
             self._dpg.add_text("Number of random occurences happened: ")
-        self._dpg.set_item_pos(data_window, [350, 0])
-        with self._dpg.window(label="Control box", width=350, height=350) as control_box:
+        return window_id
+
+    def _setup_control_window(self):
+        window_id = "sim_control_window"
+        with self._dpg.window(label="Control box", id=window_id, width=350, height=350, no_close=True):
             self._dpg.add_text("Control the simulation while running")
             self._dpg.add_text("====================================")
             self._dpg.add_text("Random Purge")
@@ -101,7 +83,44 @@ class UI():
             with self._dpg.group(horizontal=True):
                 self._dpg.add_button(label="Insert Virus")
                 self._dpg.add_button(label="Kill virus")
-        self._dpg.set_item_pos(control_box, [350, 350])
+        return window_id
+
+    def _setup_simulation(self, sender, callback):
+        if self._dpg.get_value("file_selected") == "":
+            # Check that a file has been selected, else abort setup
+            dpg.show_item("warn_select_file")
+            return
+        self._dpg.hide_item("primary")
+
+        b_fires = self._dpg.get_value("b_fires")
+        b_virus = self._dpg.get_value("b_virus")
+        self.sec_tick = self._dpg.get_value("i_tick")
+
+        self.simulation = Simulation(self._dpg.get_value("file_selected"))
+        for extension in self.extensions:
+            if isinstance(extension, SimulationMortalityExtension):
+                self.simulation.register_mortality_extension(extension)
+
+        self.data_y[0] = self.simulation.organism_alive_count()
+
+        # Initial log to file
+        self.simulation._externalLog(
+            f"Number of rats: {self.simulation.organism_alive_count()}\n")
+        self.simulation._externalLog(f"Random Fires: {b_fires}\n")
+        self.simulation._externalLog(f"Random Viruses: {b_virus}\n")
+        self.simulation._externalLog(f"Ticks per second: {self.sec_tick}\n")
+
+        self.logger = logger.mvLogger(self._dpg.add_window(
+            label="mvLogger", pos=(0, 350), width=350, height=350, no_close=True))
+
+        population_graph_id = self._setup_population_graph()
+        self._dpg.set_item_pos(population_graph_id, [0, 0])
+
+        data_window_id = self._setup_data_window()
+        self._dpg.set_item_pos(data_window_id, [350, 0])
+
+        control_window_id = self._setup_control_window()
+        self._dpg.set_item_pos(control_window_id, [350, 350])
 
         for extension in self.extensions:
             extension.add_ui_elements(self)
@@ -169,14 +188,14 @@ class UI():
 
     def run(self):
         while self._dpg.is_dearpygui_running():
-            dpg.render_dearpygui_frame()
+            self.update_data()
             if not self.paused:
                 cur_time = time.time()
                 elapsed = cur_time - self.prev_update
                 if elapsed >= 1/self.sec_tick:
                     self.advance_simulation()
                     self.prev_update = cur_time
-            self.update_data()
+            dpg.render_dearpygui_frame()
         self._dpg.destroy_context()
 
     def update_data(self):
@@ -189,16 +208,20 @@ class UI():
             "updatectr", f"Time steps processed: {cur_sim_day}")
         # Get new data from the simulation. Note we need both x and y values
         # if we want a meaningful axis unit.
-        self.data_x.append(cur_sim_day)
-        self.data_y.append(alive)
+        if cur_sim_day == len(self.data_x):
+            self.data_x.append(cur_sim_day)
+            self.data_y.append(alive)
+        else:
+            self.data_y[cur_sim_day] = alive
         self._dpg.set_value("r_alive", f"Number of rats alive: {alive}")
         self._dpg.set_value("r_dead", f"Number of rats died: {dead}")
 
         # set the series x and y to the last nsamples
         self._dpg.set_value(
             'series_tag', [self.data_x, self.data_y])
-        dpg.fit_axis_data('x_axis')
-        dpg.fit_axis_data('y_axis')
+        if not self.paused:
+            dpg.fit_axis_data('x_axis')
+            dpg.fit_axis_data('y_axis')
 
         for extension in self.extensions:
             extension.update_ui_elements(self)
