@@ -9,13 +9,17 @@
       "sexual-maturity-weeks": 4,
       "breeding-age-weeks": 5,
       "life-span-months": [30, 36],
-      "menopause-age-months": [15, 18]
+      "menopause-age-months": [15, 18],
+      "daily-energy-consumption": 1,
+      "energy-foraging-amount": 2,
+      "days-energy-stockpile-max": 60
     }
   },
   "vegetation-characteristics": {
     "Corn": {
       "energy-yield": 100,
-      "maturity-age-days": [70, 100]
+      "maturity-age-days": [70, 100],
+      "foraging-difficulty-factor": 1
     }
   },
   "organisms": [
