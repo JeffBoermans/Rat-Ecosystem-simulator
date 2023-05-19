@@ -23,29 +23,33 @@ def centered_normal_dist(range: Tuple[int, int], std_factor: float=4.0) -> Norma
 
 class Logger():
     def __init__(self, file_path: str) -> None:
-        self.file = file_path
+        # self.file = file_path
+        pass
 
     def log(self, msg: str) -> None:
         """ Logs the message with the current date and time
         """
-        file = open(self.file, 'a')
-        file.write(f"[{datetime.now()}] : {msg}\n")
-        file.close()
+        # file = open(self.file, 'a')
+        # file.write(f"[{datetime.now()}] : {msg}\n")
+        # file.close()
+        pass
     
     def setup(self, input_file: str) -> None:
         """ Sets up file with custom beautiful '='-art. 
         """
-        file = open(self.file, 'w')
-        file.write("==================================================================\n")
-        file.write(f"Log created on: {datetime.now()}\n")
-        file.write(f"Input file used: {input_file}\n")
-        file.write("IMPORTANT: Save this file externally, starting a new simulation will clear this file\n")
-        file.write("==================================================================\n")
-        file.close()
+        # file = open(self.file, 'w')
+        # file.write("==================================================================\n")
+        # file.write(f"Log created on: {datetime.now()}\n")
+        # file.write(f"Input file used: {input_file}\n")
+        # file.write("IMPORTANT: Save this file externally, starting a new simulation will clear this file\n")
+        # file.write("==================================================================\n")
+        # file.close()
+        pass
 
     def logNoTimestamp(self, msg: str) -> None:
         """ Prints the message without timestamp
         """
-        file = open(self.file, 'a')
-        file.write(f"{msg}\n")
-        file.close()
+        # file = open(self.file, 'a')
+        # file.write(f"{msg}\n")
+        # file.close()
+        pass
