@@ -65,6 +65,16 @@ class UI():
         window_id = "sim_control_window"
         with self._dpg.window(label="Control box", id=window_id, width=350, height=350, no_close=True):
             self._dpg.add_text("Control the simulation while running")
+
+            self._dpg.add_text("====================================")
+            self._dpg.add_text("Change simulation speed")
+            with self._dpg.group(horizontal=True):
+                self._dpg.add_input_int(label="Ticks per second", min_value=1,
+                                        min_clamped=True, default_value=self.sec_tick,
+                                        tag="sim_i_tick", width=100)
+                self._dpg.add_button(
+                    label="Update", callback=self.update_sim_speed)
+
             self._dpg.add_text("====================================")
             self._dpg.add_text("Random Purge")
             self._dpg.add_text("Select a min and max value")
@@ -133,7 +143,7 @@ class UI():
     def setup_main_window(self):
         self._dpg.create_context()
         self._dpg.create_viewport(
-            title='Simulation', width=1050, height=700)
+            title='Simulation', width=1065, height=738)
 
         with self._dpg.window(label="Window", tag="primary"):
             # Enable random occurrences in the simulation
@@ -185,6 +195,9 @@ class UI():
             pass
         elif self.simulation is not None:
             self.simulation.kill(rand_val)
+
+    def update_sim_speed(self):
+        self.sec_tick = self._dpg.get_value("sim_i_tick")
 
     def run(self):
         while self._dpg.is_dearpygui_running():
