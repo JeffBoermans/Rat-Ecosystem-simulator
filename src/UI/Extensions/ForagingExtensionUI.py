@@ -25,9 +25,11 @@ class ForagingExtensionUI(SimulationExtensionUI):
         self.bar_plot_energy_tag = "bar_tag_clusters_energy"
         self.bar_plot_energy_label = "energy left"
 
-    def add_ui_elements(self, ui: UI) -> None:
+    def add_ui_elements(self, ui: UI) -> int:
         # Add bar plot for cluster information
-        with ui._dpg.window(label="Cluster Window", width=350, height=350, no_close=True) as cluster_window:
+        nice_height = (ui._dpg.get_viewport_client_height() - ui._dpg.get_item_height("sim_population_graph")) / 2
+        nice_width = (ui._dpg.get_viewport_client_width()/100)*45
+        with ui._dpg.window(label="Cluster Window", width=nice_width, height=nice_height, no_close=True) as cluster_window:
             with ui._dpg.plot(label='Cluster vegetation stats', height=-1, width=-1):
                 ui._dpg.add_plot_legend()
 
@@ -39,9 +41,9 @@ class ForagingExtensionUI(SimulationExtensionUI):
 
             ui._dpg.add_bar_series(x=[], y=[], label=self.bar_plot_vegetation_label, parent=self.y_axix_tag_veg, tag=self.bar_plot_vegetation_tag)
             ui._dpg.add_bar_series(x=[], y=[], label=self.bar_plot_energy_label,     parent=self.y_axix_tag_veg, tag=self.bar_plot_energy_tag)
-            ui._dpg.set_item_pos(cluster_window, [700, 0])
+            ui._dpg.set_item_pos(cluster_window, [0, ui._dpg.get_item_height("sim_population_graph")])
 
-        with ui._dpg.window(label="Cluster 2 Window", width=350, height=350, no_close=True) as cluster_window:
+        with ui._dpg.window(label="Cluster 2 Window", width=nice_width, height=nice_height, no_close=True) as cluster_window:
             with ui._dpg.plot(label='Cluster organism stats', height=-1, width=-1):
                 ui._dpg.add_plot_legend()
 
@@ -52,7 +54,9 @@ class ForagingExtensionUI(SimulationExtensionUI):
                 self.y_axis_org = ui._dpg.add_plot_axis(ui._dpg.mvYAxis, label='y', tag=self.y_axix_tag_org)
 
             ui._dpg.add_bar_series(x=[], y=[], label=self.bar_plot_organism_label,   parent=self.y_axix_tag_org, tag=self.bar_plot_organism_tag)
-            ui._dpg.set_item_pos(cluster_window, [700, 350])
+            ui._dpg.set_item_pos(cluster_window, [0, ui._dpg.get_item_height("sim_population_graph")
+                                                  + nice_height])
+        return nice_width
 
     def update_ui_elements(self, ui: UI) -> None:
         bar_label_pairs: List[Tuple[str, int]] = []     # The (cluster label, label x-pos) pairs

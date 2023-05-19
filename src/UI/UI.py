@@ -35,7 +35,7 @@ class UI():
 
     def _setup_population_graph(self):
         window_id = "sim_population_graph"
-        with self._dpg.window(label="Population Graph", id=window_id, width=350, height=350, no_close=True):
+        with self._dpg.window(label="Population Graph", id=window_id, width=self._dpg.get_viewport_client_width(), height=350, no_close=True):
             with dpg.group(horizontal=True):
                 self._dpg.add_button(label="Start", callback=self.start)
                 self._dpg.add_button(
@@ -43,9 +43,9 @@ class UI():
                 self._dpg.add_button(label="Stop")
             with dpg.plot(label='Current Organism Population', height=-1, width=-1):
                 self._dpg.add_plot_axis(
-                    self._dpg.mvXAxis, label='x', tag='x_axis')
+                    self._dpg.mvXAxis, label='Number of days', tag='x_axis')
                 self._dpg.add_plot_axis(
-                    self._dpg.mvYAxis, label='y', tag='y_axis')
+                    self._dpg.mvYAxis, label='Number of rats', tag='y_axis')
             self._dpg.add_line_series(x=self.data_x, y=self.data_y,
                                       label="Label", parent="y_axis",
                                       tag="series_tag")
@@ -53,17 +53,17 @@ class UI():
 
     def _setup_data_window(self):
         window_id = "sim_data_window"
-        with self._dpg.window(label="Data box", id=window_id, width=350, height=350, no_close=True):
+        with self._dpg.window(label="Data box", id=window_id, width=500, height=350, no_close=True):
             self._dpg.add_text(
                 f"Day: {self.simulation.day()}", tag="updatectr")
             self._dpg.add_text("Number of rats in existence: ", tag="r_alive")
             self._dpg.add_text("Number of rats died: ", tag="r_dead")
-            self._dpg.add_text("Number of random occurences happened: ")
         return window_id
 
     def _setup_control_window(self):
         window_id = "sim_control_window"
-        with self._dpg.window(label="Control box", id=window_id, width=350, height=350, no_close=True):
+        nice_height = self._dpg.get_viewport_height() - self._dpg.get_item_height("sim_population_graph")
+        with self._dpg.window(label="Control box", id=window_id, width=350, height=nice_height, no_close=True):
             self._dpg.add_text("Control the simulation while running")
 
             self._dpg.add_text("====================================")
@@ -112,20 +112,23 @@ class UI():
             f"Number of rats: {self.simulation.organism_alive_count()}\n")
         self.simulation._externalLog(f"Ticks per second: {self.sec_tick}\n")
 
-        self.logger = logger.mvLogger(self._dpg.add_window(
-            label="mvLogger", pos=(0, 350), width=350, height=350, no_close=True))
-
         population_graph_id = self._setup_population_graph()
         self._dpg.set_item_pos(population_graph_id, [0, 0])
 
-        data_window_id = self._setup_data_window()
-        self._dpg.set_item_pos(data_window_id, [350, 0])
+        extension_width = 0
+        for extension in self.extensions:
+            extension_width = extension.add_ui_elements(self)
 
         control_window_id = self._setup_control_window()
-        self._dpg.set_item_pos(control_window_id, [350, 350])
+        self._dpg.set_item_pos(control_window_id, [extension_width, self._dpg.get_item_height(population_graph_id)])
 
-        for extension in self.extensions:
-            extension.add_ui_elements(self)
+        nice_l_width = self._dpg.get_viewport_width() - extension_width - self._dpg.get_item_width(control_window_id)
+        self.logger = logger.mvLogger(self._dpg.add_window(
+            label="mvLogger", pos=(extension_width + self._dpg.get_item_width(control_window_id), 350), width=nice_l_width, height=350, no_close=True))
+
+        data_window_id = self._setup_data_window()
+        self._dpg.set_item_pos(data_window_id, [extension_width + self._dpg.get_item_width(control_window_id), 
+                                                self._dpg.get_item_height(population_graph_id) + 350])
 
     def _file_selected(self, app_data, sender):
         dpg.hide_item("warn_select_file")
@@ -167,6 +170,7 @@ class UI():
 
         self._dpg.setup_dearpygui()
         self._dpg.show_viewport()
+        self._dpg.maximize_viewport()
         self._dpg.set_primary_window("primary", True)
 
     def pause(self):
