@@ -24,6 +24,8 @@ class ForagingExtensionUI(SimulationExtensionUI):
         self.bar_plot_organism_label = "organism population"
         self.bar_plot_energy_tag = "bar_tag_clusters_energy"
         self.bar_plot_energy_label = "energy left"
+        self.energy_maxes = [1000]
+        self.population_maxes =[1]
 
     def add_ui_elements(self, ui: UI) -> int:
         # Add bar plot for cluster information
@@ -85,15 +87,35 @@ class ForagingExtensionUI(SimulationExtensionUI):
             bar_energy_series[0].append(base_x+2)
             bar_energy_series[1].append(cluster.energy_amount)
 
+        #Collect 50 samples
+        if len(self.energy_maxes) == 50:
+            del self.energy_maxes[0]
+        self.energy_maxes.append(max(bar_energy_series[1]))
+        max_energy = max(self.energy_maxes)
+        # Ik weet niet hoezo (het is ook gwn laat en ik ben moe) maar om de 1 of andere fucking
+        # rot reden moet ik dit hardcoden en accepteert die niet hoe ik initializeer?
+        # Als ik deze 2 schreeuwlelijke lijnen niet toevoeg loopt de y-waarde van 0 tot 0 op die
+        # godvergeten grafiek
+        # Jeff is tired
+        if max_energy == 0:
+            max_energy = 1000
+
+        if len(self.population_maxes) == 50:
+            del self.population_maxes[0]
+        self.population_maxes.append(max(bar_org_pop_series[1]))
+        max_pop = max(self.population_maxes)
+        if max_pop == 0:
+            max_pop = 1
+
         ui._dpg.set_axis_ticks(self.x_axis_veg, tuple(bar_label_pairs))
         ui._dpg.set_value(self.bar_plot_vegetation_tag, [bar_veg_pop_series[0], bar_veg_pop_series[1]])
         ui._dpg.set_value(self.bar_plot_energy_tag,     [bar_energy_series[0],  bar_energy_series[1]])
 
         ui._dpg.fit_axis_data(self.x_axis_tag_veg)
-        ui._dpg.fit_axis_data(self.y_axix_tag_veg)
+        ui._dpg.set_axis_limits(self.y_axix_tag_veg, 0, max_energy)
 
         ui._dpg.set_value(self.bar_plot_organism_tag,   [bar_org_pop_series[0], bar_org_pop_series[1]])
         ui._dpg.set_axis_ticks(self.x_axis_org, tuple(bar_label_pairs))
 
         ui._dpg.fit_axis_data(self.x_axis_tag_org)
-        ui._dpg.fit_axis_data(self.y_axix_tag_org)
+        ui._dpg.set_axis_limits(self.y_axix_tag_org, 0 , max_pop)

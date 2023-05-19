@@ -225,6 +225,7 @@ class UI():
         # set the series x and y to the last nsamples
         self._dpg.set_value(
             'series_tag', [self.data_x, self.data_y])
+        
         if not self.paused:
             dpg.fit_axis_data('x_axis')
             dpg.fit_axis_data('y_axis')
