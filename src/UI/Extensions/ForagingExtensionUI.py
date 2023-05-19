@@ -27,7 +27,7 @@ class ForagingExtensionUI(SimulationExtensionUI):
 
     def add_ui_elements(self, ui: UI) -> None:
         # Add bar plot for cluster information
-        with ui._dpg.window(label="Cluster Window", width=350, height=350) as cluster_window:
+        with ui._dpg.window(label="Cluster Window", width=350, height=350, no_close=True) as cluster_window:
             with ui._dpg.plot(label='Cluster vegetation stats', height=-1, width=-1):
                 ui._dpg.add_plot_legend()
 
@@ -41,7 +41,7 @@ class ForagingExtensionUI(SimulationExtensionUI):
             ui._dpg.add_bar_series(x=[], y=[], label=self.bar_plot_energy_label,     parent=self.y_axix_tag_veg, tag=self.bar_plot_energy_tag)
             ui._dpg.set_item_pos(cluster_window, [700, 0])
 
-        with ui._dpg.window(label="Cluster 2 Window", width=350, height=350) as cluster_window:
+        with ui._dpg.window(label="Cluster 2 Window", width=350, height=350, no_close=True) as cluster_window:
             with ui._dpg.plot(label='Cluster organism stats', height=-1, width=-1):
                 ui._dpg.add_plot_legend()
 
