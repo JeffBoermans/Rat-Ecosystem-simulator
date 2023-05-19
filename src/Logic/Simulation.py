@@ -226,7 +226,7 @@ class Simulation(object):
 
         for cluster in self.dataStore.vegetation:
             cluster.next_day()
-            print(cluster)
+
 
         for extension in self.mortality_extensions:
             extension.next_day(self.dataStore)

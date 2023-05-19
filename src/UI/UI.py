@@ -87,12 +87,8 @@ class UI():
                 self._dpg.add_button(label="KILL", callback=self.purge)
             self._dpg.add_text("=============================")
             with self._dpg.group(horizontal=True):
-                self._dpg.add_button(label="Start Fire")
-                self._dpg.add_button(label="End Fire")
+                self._dpg.add_button(label="Insert Fire")
             self._dpg.add_text("=============================")
-            with self._dpg.group(horizontal=True):
-                self._dpg.add_button(label="Insert Virus")
-                self._dpg.add_button(label="Kill virus")
         return window_id
 
     def _setup_simulation(self, sender, callback):
@@ -102,8 +98,6 @@ class UI():
             return
         self._dpg.hide_item("primary")
 
-        b_fires = self._dpg.get_value("b_fires")
-        b_virus = self._dpg.get_value("b_virus")
         self.sec_tick = self._dpg.get_value("i_tick")
 
         self.simulation = Simulation(self._dpg.get_value("file_selected"))
@@ -116,8 +110,6 @@ class UI():
         # Initial log to file
         self.simulation._externalLog(
             f"Number of rats: {self.simulation.organism_alive_count()}\n")
-        self.simulation._externalLog(f"Random Fires: {b_fires}\n")
-        self.simulation._externalLog(f"Random Viruses: {b_virus}\n")
         self.simulation._externalLog(f"Ticks per second: {self.sec_tick}\n")
 
         self.logger = logger.mvLogger(self._dpg.add_window(
@@ -149,10 +141,7 @@ class UI():
             # Enable random occurrences in the simulation
             self._dpg.add_text("Random occurrences")
             self._dpg.add_text("=================")
-            self._dpg.add_checkbox(label="Wildfires", tag="b_fires")
-            self._dpg.add_checkbox(label="Viruses", tag="b_virus")
             # Set simulation time steps
-            self._dpg.add_text("=================")
             self._dpg.add_text(
                 "One tick is equal to one day in the simulation")
             self._dpg.add_input_int(
@@ -162,7 +151,7 @@ class UI():
             self._dpg.add_text("Add a session file (.json)")
             self._dpg.add_text("-----------------")
             with self._dpg.file_dialog(directory_selector=False, show=False, id="file_dialog_id", width=700, height=400,
-                                       callback=self._file_selected):
+                                    callback=self._file_selected):
                 self._dpg.add_file_extension(".json")
             with dpg.group(horizontal=True):
                 self._dpg.add_button(

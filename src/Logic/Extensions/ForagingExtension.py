@@ -91,7 +91,7 @@ class ForagingExtension(SimulationMortalityExtension):
         should_die: bool = foraging_info[1] <= 0
 
         if should_die:
-            log.append(f"{organism.name} {organism.id} died at age {organism.age} to starvation with {foraging_info[1]} energy remaining")
+            log.append(f"{organism.name} {organism.id} starved to death (Age: {organism.age})")
 
         return should_die
 
