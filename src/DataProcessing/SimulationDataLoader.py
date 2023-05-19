@@ -1,4 +1,5 @@
 import json
+from typing import Dict
 
 from ..Logic.DataStore import DataStore
 from ..Logic.Entities.organism import Organism, OrganismInfo, OrganismSexesEnum
@@ -36,21 +37,36 @@ class SimulationDataLoader(object):
             organism_characteristics: dict = data.get("organism-characteristics", None)
             vegetation_characteristics: dict = data.get("vegetation-characteristics", None)
 
+            required_organism_char_keys = {"sexual-maturity-weeks", "breeding-age-weeks", "life-span-months", "menopause-age-months"}
+            required_vegetation_char_keys = {"energy-yield", "maturity-age-days"}
+            
+
             assert isinstance(food_chain_preys, dict), "The food chain preys key must have a dictionary value"
             assert isinstance(organism_characteristics, dict), "The organism characteristics key must have a dictionary value"
             assert isinstance(vegetation_characteristics, dict), "The vegetation characteristics key must have a dictionary value"
 
-            organism_info_mapping = dict()
+            organism_info_mapping: Dict[str, OrganismInfo] = dict()
             try:
-                organism_info_mapping = {
-                    organism_name : OrganismInfo(
-                            o_m = 7 * int(organism_characteristics[organism_name]["sexual-maturity-weeks"]),
-                            o_b = 7 * int(organism_characteristics[organism_name]["breeding-age-weeks"]),
-                            o_ls = organism_characteristics[organism_name]["life-span-months"],
-                            o_mpa = organism_characteristics[organism_name]["menopause-age-months"]
+                organism_info_mapping = dict()
+                # Map each organism species to an object instance that keeps
+                # track of the species-specific data
+                for organism_name in organism_characteristics.keys():
+                    species_characteristics: dict = organism_characteristics[organism_name]
+                    non_required_characteristics = {
+                        key: species_characteristics[key]
+                        for key in species_characteristics.keys()
+                        if key not in required_organism_char_keys
+                    }
+
+                    non_required_characteristics = self.get_trimmed_dict(species_characteristics, required_organism_char_keys)
+                    organism_info_mapping[organism_name] = OrganismInfo(
+                        o_m = 7 * int(species_characteristics["sexual-maturity-weeks"]),
+                        o_b = 7 * int(species_characteristics["breeding-age-weeks"]),
+                        o_ls = species_characteristics["life-span-months"],
+                        o_mpa = species_characteristics["menopause-age-months"],
+                        **non_required_characteristics
                     )
-                    for organism_name in organism_characteristics.keys()
-                }
+
             except KeyError as e:
                 raise MissingInputKey(f"Malformed organism info entry: {e}")
 
@@ -99,6 +115,7 @@ class SimulationDataLoader(object):
                     vegetations.remove(vegetation["name"])
                 
                 vegetation_info = vegetation_characteristics[vegetation_name]
+                non_required_characteristics = self.get_trimmed_dict(vegetation_info, required_vegetation_char_keys)
 
                 vegetation_cluster = AnnualVegetationCluster(
                     species=vegetation_name,
@@ -106,7 +123,8 @@ class SimulationDataLoader(object):
                     amount=vegetation["amount"],
                     energy_yield=vegetation_info["energy-yield"],
                     maturity_age_range=vegetation_info["maturity-age-days"],
-                    id=datastore.reserve_vegetation_id()
+                    id=datastore.reserve_vegetation_id(),
+                    **non_required_characteristics
                 )
                 datastore.vegetation.append(vegetation_cluster)
 
@@ -116,3 +134,16 @@ class SimulationDataLoader(object):
                 raise InputException(f"{input_path}: Uninitialized vegetation detected in food-chain: {vegetations}")
 
             datastore.foodChain = food_chain_preys
+
+    def get_trimmed_dict(self, original: dict, to_trim_keys: list) -> dict:
+        """Return a shallow copy of the original dict with all to trim keys removed.
+        
+        :param original: The dict to get a trimmed version of
+        :param to_trim_keys: The keys to not include in the copy; the keys to trim
+        :return: A trimmed shallow copy of the original dict
+        """
+        return {
+            key: original[key]
+            for key in original.keys()
+            if key not in to_trim_keys
+        }

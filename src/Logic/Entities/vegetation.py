@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Any, Dict, Union
 from statistics import NormalDist
 from numpy import random as np_random
 
@@ -8,13 +8,22 @@ from ...utils import centered_normal_dist
 
 class Vegetation(Entity):
     """A plant"""
-    def __init__(self, species: str, age: int, id: int):
+    def __init__(self, species: str, age: int, id: int, **kwargs):
         """
         :param species: The species of the vegetation
         :param age: The age of the vegetation
         :param id: The unique identifier of the vegetation
         """
         super(Vegetation, self).__init__(species, age, id)
+        self.extension_properties: Dict[str, Any] = { **kwargs }
+        """Any non-required or expected organism info properties get stored for use by extensions."""
+
+    def get_extension_property(self, property_name: str) -> Union[Any, None]:
+        """Get the value of an extension property.
+        
+        :return: The property value, None if the property does not exist
+        """
+        return self.extension_properties.get(property_name, None)
 
     def __repr__(self) -> str:
         return f"{self.name} | {self.age} Age | {self.id} ID"
@@ -23,12 +32,12 @@ class Vegetation(Entity):
 class MonoVegetationCluster(Vegetation):
     """A homogenous cluster of plants that follow an undefined life/growth cycle.
     """
-    def __init__(self, species: str, age: int, id: int, energy_yield: int, maturity_age_range: Tuple[int, int]) -> None:
+    def __init__(self, species: str, age: int, id: int, energy_yield: int, maturity_age_range: Tuple[int, int], **kwargs) -> None:
         """
         :param energy_yield: The amount of energy that a single plant in the cluster yields
         :param maturity_age_range: The age range in days between which the vegetation normally reaches maturation
         """
-        super(MonoVegetationCluster, self).__init__(species, age, id)
+        super(MonoVegetationCluster, self).__init__(species, age, id, **kwargs)
         self._crop_energy_yield: int = energy_yield
         """The fixed energy yield for a single crop once it reaches maturity"""
         self._energy_amount: int = 0
@@ -83,7 +92,7 @@ class AnnualVegetationCluster(MonoVegetationCluster):
     Plants with an annual life cycle do not survive past their first
     growing season.
     """
-    def __init__(self, species: str, age: int, id: int, amount: int, energy_yield: int, maturity_age_range: Tuple[int, int]) -> None:
+    def __init__(self, species: str, age: int, id: int, amount: int, energy_yield: int, maturity_age_range: Tuple[int, int], **kwargs) -> None:
         """
         :param species: The species of the vegetation
         :param age: The initial age of the vegetation in days
@@ -93,7 +102,8 @@ class AnnualVegetationCluster(MonoVegetationCluster):
         :param maturity_age_range: The age range in days between which the vegetation normally reaches maturation
         """
         super(AnnualVegetationCluster, self).__init__(species=species, age=age, id=id,
-                                                      energy_yield=energy_yield, maturity_age_range=maturity_age_range)
+                                                      energy_yield=energy_yield, maturity_age_range=maturity_age_range,
+                                                      **kwargs)
         self.mature_amount: int = 0
         """The amount of mature plants of the specified species in this cluster"""
         self.immature_amount: int = amount
@@ -111,7 +121,7 @@ class AnnualVegetationCluster(MonoVegetationCluster):
         self.immature_amount -= matured_count
 
     def repopulate(self, day: int) -> None:
-        if (day % 365) == 0:
+        if (self.age % 365) == 0:
             self.immature_amount = self.mature_amount
             self.mature_amount = 0
             self.age = 0
