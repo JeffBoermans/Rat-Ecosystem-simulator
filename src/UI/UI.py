@@ -62,7 +62,8 @@ class UI():
 
     def _setup_control_window(self):
         window_id = "sim_control_window"
-        nice_height = self._dpg.get_viewport_height() - self._dpg.get_item_height("sim_population_graph")
+        nice_height = self._dpg.get_viewport_height(
+        ) - self._dpg.get_item_height("sim_population_graph")
         with self._dpg.window(label="Control box", id=window_id, width=350, height=nice_height, no_close=True):
             self._dpg.add_text("Control the simulation while running")
 
@@ -120,14 +121,16 @@ class UI():
             extension_width = extension.add_ui_elements(self)
 
         control_window_id = self._setup_control_window()
-        self._dpg.set_item_pos(control_window_id, [extension_width, self._dpg.get_item_height(population_graph_id)])
+        self._dpg.set_item_pos(control_window_id, [
+                               extension_width, self._dpg.get_item_height(population_graph_id)])
 
-        nice_l_width = self._dpg.get_viewport_width() - extension_width - self._dpg.get_item_width(control_window_id)
+        nice_l_width = self._dpg.get_viewport_width() - extension_width - \
+            self._dpg.get_item_width(control_window_id)
         self.logger = logger.mvLogger(self._dpg.add_window(
             label="mvLogger", pos=(extension_width + self._dpg.get_item_width(control_window_id), 350), width=nice_l_width, height=350, no_close=True))
 
         data_window_id = self._setup_data_window()
-        self._dpg.set_item_pos(data_window_id, [extension_width + self._dpg.get_item_width(control_window_id), 
+        self._dpg.set_item_pos(data_window_id, [extension_width + self._dpg.get_item_width(control_window_id),
                                                 self._dpg.get_item_height(population_graph_id) + 350])
 
     def _file_selected(self, app_data, sender):
@@ -154,7 +157,7 @@ class UI():
             self._dpg.add_text("Add a session file (.json)")
             self._dpg.add_text("-----------------")
             with self._dpg.file_dialog(directory_selector=False, show=False, id="file_dialog_id", width=700, height=400,
-                                    callback=self._file_selected):
+                                       callback=self._file_selected):
                 self._dpg.add_file_extension(".json")
             with dpg.group(horizontal=True):
                 self._dpg.add_button(
@@ -187,7 +190,7 @@ class UI():
             # TODO: Maybe error message display?
             pass
         elif self.simulation is not None:
-            self.simulation.kill(rand_val)
+            self.simulation.kill_amount(rand_val)
 
     def update_sim_speed(self):
         self.sec_tick = self._dpg.get_value("sim_i_tick")
@@ -225,7 +228,7 @@ class UI():
         # set the series x and y to the last nsamples
         self._dpg.set_value(
             'series_tag', [self.data_x, self.data_y])
-        
+
         if not self.paused:
             dpg.fit_axis_data('x_axis')
             dpg.fit_axis_data('y_axis')
