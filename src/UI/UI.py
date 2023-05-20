@@ -153,10 +153,14 @@ class UI():
         self._dpg.create_context()
         self._dpg.create_viewport(
             title='Simulation', width=1065, height=738)
-
         with self._dpg.window(label="Window", tag="primary"):
             # Enable random occurrences in the simulation
-            self._dpg.add_text("Random occurrences")
+            self._dpg.add_text("Simulation setup")
+            self._dpg.add_text("=================")
+            self._dpg.add_text("Estimate carry capacity with curve fitting or estimate carrying capacity")
+            self._dpg.add_text("through simple averaging of the surrounding population values")
+            self._dpg.add_combo(items=("Curve Fitting","Estimate carrying capacity"), tag="graph_selector", default_value="Curve Fitting"
+                                ,width=300)
             self._dpg.add_text("=================")
             # Set simulation time steps
             self._dpg.add_text(
@@ -258,7 +262,7 @@ class UI():
             self.logger.log(log)
 
     def _update_carry_capacity_estimate(self):
-        if True:
+        if self._dpg.get_value("graph_selector") == "Estimate carrying capacity":
             # Estimate carry capacity with curve fitting
             self.data_y_carry_capacity.append(np.NAN)
             try:
