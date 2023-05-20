@@ -4,6 +4,7 @@ Project for Computational Biology (2022-2023), 3rd Bachelor Computer Science at 
 
 
 <img width="1470" alt="Application Screenshot" src="https://github.com/JeffBoermans/COMPBIO-NACO/assets/60882129/3ca648d5-a545-4cba-8073-833578a583bf">
+
 # Setup
 
 This section is only applicable if you are developing for this repository. The project code specifies its dependencies via the `requirements.txt` file present in the project root. The project root does contain install scripts, but currently only the `install.sh` scipt is guaranteed to work as intended. To install the requirements, run the following commands:
