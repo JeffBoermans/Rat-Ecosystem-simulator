@@ -236,8 +236,11 @@ class UI():
         cur_sim_day = self.simulation.day()
         alive = self.simulation.organism_alive_count()
         dead = self.simulation.organism_dead_count()
+        est_years = cur_sim_day // 365
+        est_months = (cur_sim_day - 365 * est_years) // 30
+        est_days = cur_sim_day - 30 * est_months - 365 * est_years
         self._dpg.set_value(
-            "updatectr", f"Time steps processed: {cur_sim_day}")
+            "updatectr", f"Time steps processed: {cur_sim_day} (y:{est_years}, m:{est_months}, d:{est_days})")
         # Get new data from the simulation. Note we need both x and y values
         # if we want a meaningful axis unit.
         if cur_sim_day == len(self.data_x):
