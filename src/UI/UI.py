@@ -37,6 +37,9 @@ class UI():
         self.extensions: List[SimulationExtensionUI] = extensions
 
         self.line_plot_carry_capacity_tag = "series_tag_carry_capacity"
+        self.dropdown_carry_cap_est_simple_avg = "Curve Smoothing"
+        self.dropdown_carry_cap_est_curve_fit = "Curve Fitting"
+        self.dropdown_carry_cap_est_nothing = "Nothing"
 
 
     def _setup_population_graph(self):
@@ -55,9 +58,11 @@ class UI():
             self._dpg.add_line_series(x=self.data_x, y=self.data_y,
                                       label="Organism Population", parent="y_axis",
                                       tag="series_tag")
-            self._dpg.add_line_series(x=self.data_x, y=self.data_y_carry_capacity,
-                                label="Carry Capacity approx.", parent="y_axis",
-                                tag=self.line_plot_carry_capacity_tag)
+
+            if self._is_carry_capacity_estimation_active():
+                self._dpg.add_line_series(x=self.data_x, y=self.data_y_carry_capacity,
+                                    label="Carry Capacity approx.", parent="y_axis",
+                                    tag=self.line_plot_carry_capacity_tag)
         return window_id
 
     def _setup_data_window(self):
@@ -157,10 +162,13 @@ class UI():
             # Enable random occurrences in the simulation
             self._dpg.add_text("Simulation setup")
             self._dpg.add_text("=================")
-            self._dpg.add_text("Estimate carry capacity with curve fitting or estimate carrying capacity")
-            self._dpg.add_text("through simple averaging of the surrounding population values")
-            self._dpg.add_combo(items=("Curve Fitting","Estimate carrying capacity"), tag="graph_selector", default_value="Curve Fitting"
-                                ,width=300)
+            self._dpg.add_text("Estimate carry capacity of the environment defined in the input file:")
+            self._dpg.add_text("Method one is curve fitting -- a non-linear regression method based on")
+            self._dpg.add_text("  the Verhulst model op population growth.")
+            self._dpg.add_text("Method two is curve smoothing -- the simple averaging of the surrounding")
+            self._dpg.add_text("  population values")
+            self._dpg.add_combo(items=(self.dropdown_carry_cap_est_curve_fit, self.dropdown_carry_cap_est_simple_avg, self.dropdown_carry_cap_est_nothing),
+                                tag="graph_selector", default_value=self.dropdown_carry_cap_est_nothing, width=300)
             self._dpg.add_text("=================")
             # Set simulation time steps
             self._dpg.add_text(
@@ -244,8 +252,10 @@ class UI():
         # set the series x and y to the last nsamples
         self._dpg.set_value(
             'series_tag', [self.data_x, self.data_y])
-        self._dpg.set_value(self.line_plot_carry_capacity_tag, [self.data_x, self.data_y_carry_capacity])
-        
+
+        if self._is_carry_capacity_estimation_active():
+            self._dpg.set_value(self.line_plot_carry_capacity_tag, [self.data_x, self.data_y_carry_capacity])
+
         if not self.paused:
             dpg.fit_axis_data('x_axis')
             dpg.fit_axis_data('y_axis')
@@ -262,7 +272,15 @@ class UI():
             self.logger.log(log)
 
     def _update_carry_capacity_estimate(self):
-        if self._dpg.get_value("graph_selector") == "Estimate carrying capacity":
+        """Update the list containing the running carry capacity estimate of the
+        environment.
+        """
+
+        if not self._is_carry_capacity_estimation_active():
+            return
+
+        carry_cap_est_method: str = self._dpg.get_value("graph_selector")
+        if carry_cap_est_method == self.dropdown_carry_cap_est_curve_fit:
             # Estimate carry capacity with curve fitting
             self.data_y_carry_capacity.append(np.NAN)
             try:
@@ -274,7 +292,7 @@ class UI():
             # No fit found, leave dummy NAN value to pad series with
             except RuntimeError:
                 pass
-        else:
+        elif carry_cap_est_method == self.dropdown_carry_cap_est_simple_avg:
             # Estimate carrying capacity through simple averaging of
             # the surrounding population values
             current_x_width: int = len(self.data_x)
@@ -299,3 +317,5 @@ class UI():
 
                 self.data_y_carry_capacity[next_avg_index] = simple_average      # y-list length is always <= x-list length
 
+    def _is_carry_capacity_estimation_active(self) -> bool:
+        return self._dpg.get_value("graph_selector") != self.dropdown_carry_cap_est_nothing
