@@ -1,14 +1,16 @@
 import random
 import time
-
-from typing import List
-
+import numpy as np
 import dearpygui.dearpygui as dpg
 import dearpygui_ext.logger as logger
+
+from scipy.optimize import curve_fit
+from typing import List
 
 from ..Logic.Simulation import Simulation
 from ..Logic.Extensions.SimulationExtension import SimulationExtension, SimulationMortalityExtension
 from .Extensions.SimulationExtensionUI import SimulationExtensionUI
+from ..utils import logistic_growth
 
 
 class UI():
@@ -20,8 +22,9 @@ class UI():
                 raise RuntimeError(
                     f"All extensions must be instances of both the {SimulationExtension.__name__} class and the {SimulationExtensionUI.__name__} class")
 
-        self.data_x = [0.0]
-        self.data_y = [0.0]
+        self.data_x: List[float] = [0]
+        self.data_y: List[float] = [0.0]
+        self.data_y_carry_capacity: List[float] = [0.0]
         self._dpg = _dpg
         self.sec_tick = 0
 
@@ -32,6 +35,9 @@ class UI():
         self.simulation = None
 
         self.extensions: List[SimulationExtensionUI] = extensions
+
+        self.line_plot_carry_capacity_tag = "series_tag_carry_capacity"
+
 
     def _setup_population_graph(self):
         window_id = "sim_population_graph"
@@ -47,8 +53,11 @@ class UI():
                 self._dpg.add_plot_axis(
                     self._dpg.mvYAxis, label='Number of rats', tag='y_axis')
             self._dpg.add_line_series(x=self.data_x, y=self.data_y,
-                                      label="Label", parent="y_axis",
+                                      label="Organism Population", parent="y_axis",
                                       tag="series_tag")
+            self._dpg.add_line_series(x=self.data_x, y=self.data_y_carry_capacity,
+                                label="Carry Capacity approx.", parent="y_axis",
+                                tag=self.line_plot_carry_capacity_tag)
         return window_id
 
     def _setup_data_window(self):
@@ -101,6 +110,8 @@ class UI():
         self.sec_tick = self._dpg.get_value("i_tick")
 
         self.simulation = Simulation(self._dpg.get_value("file_selected"))
+        # Do explicit checks for supertype of each extension, only register
+        # the extensions that implement simulation Logic with the Simulation 
         for extension in self.extensions:
             if isinstance(extension, SimulationMortalityExtension):
                 self.simulation.register_mortality_extension(extension)
@@ -117,7 +128,7 @@ class UI():
 
         extension_width = 0
         for extension in self.extensions:
-            extension_width = extension.add_ui_elements(self)
+            extension_width = max(extension.add_ui_elements(self), extension_width)
 
         control_window_id = self._setup_control_window()
         self._dpg.set_item_pos(control_window_id, [extension_width, self._dpg.get_item_height(population_graph_id)])
@@ -217,6 +228,7 @@ class UI():
         if cur_sim_day == len(self.data_x):
             self.data_x.append(cur_sim_day)
             self.data_y.append(alive)
+            self._update_carry_capacity_estimate()
         else:
             self.data_y[cur_sim_day] = alive
         self._dpg.set_value("r_alive", f"Number of rats alive: {alive}")
@@ -225,6 +237,7 @@ class UI():
         # set the series x and y to the last nsamples
         self._dpg.set_value(
             'series_tag', [self.data_x, self.data_y])
+        self._dpg.set_value(self.line_plot_carry_capacity_tag, [self.data_x, self.data_y_carry_capacity])
         
         if not self.paused:
             dpg.fit_axis_data('x_axis')
@@ -240,3 +253,42 @@ class UI():
 
         for log in logs:
             self.logger.log(log)
+
+    def _update_carry_capacity_estimate(self):
+        if True:
+            # Estimate carry capacity with curve fitting
+            self.data_y_carry_capacity.append(np.NAN)
+            try:
+                params, cov = curve_fit(logistic_growth, self.data_x, self.data_y)
+                # The estimated r and K values of the Verhulst model
+                # for population growth
+                r_fit, K_fit = params
+                self.data_y_carry_capacity[-1] = K_fit
+            # No fit found, leave dummy NAN value to pad series with
+            except RuntimeError:
+                pass
+        else:
+            # Estimate carrying capacity through simple averaging of
+            # the surrounding population values
+            current_x_width: int = len(self.data_x)
+            current_x_width_mod = int = current_x_width % 2
+            chosen_simple_avg_width: int = 2000
+            chosen_half_width: int = chosen_simple_avg_width // 2
+
+            catchup_index: int = current_x_width // 2
+            caughtup_index: int = current_x_width - chosen_half_width
+            has_not_caught_up: bool = catchup_index > caughtup_index
+
+            # Keep the x and y series the same length for proper rendering
+            self.data_y_carry_capacity.append(np.NAN)
+
+            should_calculate: bool = not (has_not_caught_up and current_x_width_mod == 0)
+            if should_calculate:
+                next_avg_index: int = catchup_index if has_not_caught_up else caughtup_index
+                next_avg_half_width: int = catchup_index if has_not_caught_up else chosen_half_width
+
+                required_data_amount: int = 2 * next_avg_half_width + has_not_caught_up - (catchup_index == caughtup_index and current_x_width_mod)
+                simple_average: int = np.mean(self.data_y[current_x_width - required_data_amount:])
+
+                self.data_y_carry_capacity[next_avg_index] = simple_average      # y-list length is always <= x-list length
+
