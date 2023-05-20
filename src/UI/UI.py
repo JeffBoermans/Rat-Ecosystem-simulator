@@ -24,9 +24,13 @@ class UI():
 
         self.data_x: List[float] = [0]
         self.data_y: List[float] = [0.0]
-        self.data_y_carry_capacity: List[float] = [0.0]
         self._dpg = _dpg
         self.sec_tick = 0
+
+        self.data_y_carry_capacity: List[float] = [0.0]
+        """The carry capacity estimate values for each time step in the simulation"""
+        self.carry_capacity_curve_smoothing_width: int = 1000
+        """The width of the range of y-values averaged through curve smoothing."""
 
         self.paused = True
         self.prev_update = time.time()
@@ -36,7 +40,11 @@ class UI():
 
         self.extensions: List[SimulationExtensionUI] = extensions
 
-        self.line_plot_carry_capacity_tag = "series_tag_carry_capacity"
+        # dearpy labels, tags, ...
+        self.tag_input_carry_capacity_width = "input_tag_carry_capacity_width"
+        self.tag_group_carry_capacity_curve_smoothing = "group_tag_carry_capacity_curve_smoothing"
+        self.tag_line_plot_carry_capacity = "series_tag_carry_capacity"
+        self.tag_options_carry_capacity = "graph_selector"
         self.dropdown_carry_cap_est_simple_avg = "Curve Smoothing"
         self.dropdown_carry_cap_est_curve_fit = "Curve Fitting"
         self.dropdown_carry_cap_est_nothing = "Nothing"
@@ -62,7 +70,7 @@ class UI():
             if self._is_carry_capacity_estimation_active():
                 self._dpg.add_line_series(x=self.data_x, y=self.data_y_carry_capacity,
                                     label="Carry Capacity approx.", parent="y_axis",
-                                    tag=self.line_plot_carry_capacity_tag)
+                                    tag=self.tag_line_plot_carry_capacity)
         return window_id
 
     def _setup_data_window(self):
@@ -114,6 +122,7 @@ class UI():
         self._dpg.hide_item("primary")
 
         self.sec_tick = self._dpg.get_value("i_tick")
+        self.carry_capacity_curve_smoothing_width = self._dpg.get_value(self.tag_input_carry_capacity_width)
 
         self.simulation = Simulation(self._dpg.get_value("file_selected"))
         # Do explicit checks for supertype of each extension, only register
@@ -154,6 +163,12 @@ class UI():
         self._dpg.set_value(
             "file_selected", f"{sender['selections'][sender['file_name']]}")
 
+    def _determine_curve_smoothing_input_visibility(self):
+        if self._is_selected_curve_smoothing():
+            self._dpg.show_item(self.tag_group_carry_capacity_curve_smoothing)
+        else:
+            self._dpg.hide_item(self.tag_group_carry_capacity_curve_smoothing)
+
     def setup_main_window(self):
         self._dpg.create_context()
         self._dpg.create_viewport(
@@ -168,7 +183,15 @@ class UI():
             self._dpg.add_text("Method two is curve smoothing -- the simple averaging of the surrounding")
             self._dpg.add_text("  population values")
             self._dpg.add_combo(items=(self.dropdown_carry_cap_est_curve_fit, self.dropdown_carry_cap_est_simple_avg, self.dropdown_carry_cap_est_nothing),
-                                tag="graph_selector", default_value=self.dropdown_carry_cap_est_nothing, width=300)
+                                tag=self.tag_options_carry_capacity, default_value=self.dropdown_carry_cap_est_nothing, width=300, callback=self._determine_curve_smoothing_input_visibility)
+
+            # Carry Capacity Curve smoothing input box
+            self._dpg.add_text("Change curve smoothing width")
+            with self._dpg.group(horizontal=True, tag=self.tag_group_carry_capacity_curve_smoothing, show=self._is_selected_curve_smoothing()):
+                self._dpg.add_input_int(label="smoothing width", min_value=2,
+                                        min_clamped=True, tag=self.tag_input_carry_capacity_width,
+                                        default_value=self.carry_capacity_curve_smoothing_width,
+                                        width=100)
             self._dpg.add_text("=================")
             # Set simulation time steps
             self._dpg.add_text(
@@ -257,7 +280,7 @@ class UI():
             'series_tag', [self.data_x, self.data_y])
 
         if self._is_carry_capacity_estimation_active():
-            self._dpg.set_value(self.line_plot_carry_capacity_tag, [self.data_x, self.data_y_carry_capacity])
+            self._dpg.set_value(self.tag_line_plot_carry_capacity, [self.data_x, self.data_y_carry_capacity])
 
         if not self.paused:
             dpg.fit_axis_data('x_axis')
@@ -282,7 +305,7 @@ class UI():
         if not self._is_carry_capacity_estimation_active():
             return
 
-        carry_cap_est_method: str = self._dpg.get_value("graph_selector")
+        carry_cap_est_method: str = self._dpg.get_value(self.tag_options_carry_capacity)
         if carry_cap_est_method == self.dropdown_carry_cap_est_curve_fit:
             # Estimate carry capacity with curve fitting
             self.data_y_carry_capacity.append(np.NAN)
@@ -300,7 +323,7 @@ class UI():
             # the surrounding population values
             current_x_width: int = len(self.data_x)
             current_x_width_mod = int = current_x_width % 2
-            chosen_simple_avg_width: int = 2000
+            chosen_simple_avg_width: int = self.carry_capacity_curve_smoothing_width
             chosen_half_width: int = chosen_simple_avg_width // 2
 
             catchup_index: int = current_x_width // 2
@@ -321,4 +344,11 @@ class UI():
                 self.data_y_carry_capacity[next_avg_index] = simple_average      # y-list length is always <= x-list length
 
     def _is_carry_capacity_estimation_active(self) -> bool:
-        return self._dpg.get_value("graph_selector") != self.dropdown_carry_cap_est_nothing
+        """Check whether any method of carry capacity estimation is being used"""
+        return self._dpg.get_value(self.tag_options_carry_capacity) != self.dropdown_carry_cap_est_nothing
+
+    def _is_selected_curve_smoothing(self) -> bool:
+        """Whether curve smoothing (simple average) is the selected method
+        for carry capacity estimation.
+        """
+        return self._dpg.get_value(self.tag_options_carry_capacity) == self.dropdown_carry_cap_est_simple_avg
