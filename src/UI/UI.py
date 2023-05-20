@@ -178,10 +178,13 @@ class UI():
             self._dpg.add_text("Simulation setup")
             self._dpg.add_text("=================")
             self._dpg.add_text("Estimate carry capacity of the environment defined in the input file:")
+            self._dpg.add_text("---")
             self._dpg.add_text("Method one is curve fitting -- a non-linear regression method based on")
-            self._dpg.add_text("  the Verhulst model op population growth.")
+            self._dpg.add_text("the Verhulst model op population growth.")
+            self._dpg.add_text("---")
             self._dpg.add_text("Method two is curve smoothing -- the simple averaging of the surrounding")
-            self._dpg.add_text("  population values")
+            self._dpg.add_text("population values")
+            self._dpg.add_text("---")
             self._dpg.add_combo(items=(self.dropdown_carry_cap_est_curve_fit, self.dropdown_carry_cap_est_simple_avg, self.dropdown_carry_cap_est_nothing),
                                 tag=self.tag_options_carry_capacity, default_value=self.dropdown_carry_cap_est_nothing, width=300, callback=self._determine_curve_smoothing_input_visibility)
 
@@ -272,7 +275,8 @@ class UI():
             self._update_carry_capacity_estimate()
         else:
             self.data_y[cur_sim_day] = alive
-        self._dpg.set_value("r_alive", f"Number of rats alive: {alive}")
+        males, females = self.simulation.male_female_ratio()
+        self._dpg.set_value("r_alive", f"Number of rats alive: {alive} (M: {males} / F: {females})")
         self._dpg.set_value("r_dead", f"Number of rats died: {dead}")
 
         # set the series x and y to the last nsamples

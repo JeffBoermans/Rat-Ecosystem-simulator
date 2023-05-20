@@ -24,7 +24,8 @@ class DataStore(object):
 
         self.__organism_id_counter: int = 1
         self.__vegetation_id_counter: int = 1
-
+    
+    
     def reserve_organism_id(self) -> int:
         """Reserve a unique organism id.
 
