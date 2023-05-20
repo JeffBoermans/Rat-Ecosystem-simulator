@@ -64,6 +64,11 @@ class Simulation(object):
         """ Get amount of organisms currently alive in simulation
         """
         return len(self.dataStore.organisms)
+    
+    def male_female_ratio(self):
+        """ Get the amount of males/females currently alive in the simulation
+        """
+        return len(self.dataStore.female_organisms), len(self.dataStore.male_organisms)
 
     def organism_dead_count(self):
         """ Get amount of organisms that have passed away in the simulation
