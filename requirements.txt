@@ -2,3 +2,4 @@ dearpygui
 dearpygui_ext
 pyinstaller
 numpy
+scipy
