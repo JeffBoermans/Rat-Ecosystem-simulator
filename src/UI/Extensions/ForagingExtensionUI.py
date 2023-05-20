@@ -39,7 +39,7 @@ class ForagingExtensionUI(SimulationExtensionUI):
                 self.x_axis_veg = ui._dpg.add_plot_axis(ui._dpg.mvXAxis, label='Clusters', tag=self.x_axis_tag_veg, no_gridlines=True)
 
                 # Add y-axis
-                self.y_axis_veg = ui._dpg.add_plot_axis(ui._dpg.mvYAxis, label='y', tag=self.y_axix_tag_veg)
+                self.y_axis_veg = ui._dpg.add_plot_axis(ui._dpg.mvYAxis, label='Energy left', tag=self.y_axix_tag_veg)
 
             ui._dpg.add_bar_series(x=[], y=[], label=self.bar_plot_vegetation_label, parent=self.y_axix_tag_veg, tag=self.bar_plot_vegetation_tag)
             ui._dpg.add_bar_series(x=[], y=[], label=self.bar_plot_energy_label,     parent=self.y_axix_tag_veg, tag=self.bar_plot_energy_tag)
@@ -53,7 +53,7 @@ class ForagingExtensionUI(SimulationExtensionUI):
                 self.x_axis_org = ui._dpg.add_plot_axis(ui._dpg.mvXAxis, label='Clusters', tag=self.x_axis_tag_org, no_gridlines=True)
 
                 # Add y-axis
-                self.y_axis_org = ui._dpg.add_plot_axis(ui._dpg.mvYAxis, label='y', tag=self.y_axix_tag_org)
+                self.y_axis_org = ui._dpg.add_plot_axis(ui._dpg.mvYAxis, label='Number of Organisms', tag=self.y_axix_tag_org)
 
             ui._dpg.add_bar_series(x=[], y=[], label=self.bar_plot_organism_label,   parent=self.y_axix_tag_org, tag=self.bar_plot_organism_tag)
             ui._dpg.set_item_pos(cluster_window, [0, ui._dpg.get_item_height("sim_population_graph")
