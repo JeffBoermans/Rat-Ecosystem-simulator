@@ -68,7 +68,7 @@ class Simulation(object):
     def organism_dead_count(self):
         """ Get amount of organisms that have passed away in the simulation
         """
-        return len(self.dataStore.death_organisms)
+        return len(self.dataStore.dead_organisms)
 
     def day(self):
         return self._sim_day
@@ -95,25 +95,17 @@ class Simulation(object):
             # This is done in a while loop with an increment at the end
             # to make sure the right amount of organisms are killed
             index = random.randrange(self.organism_alive_count())
-            self.kill(index)
+            to_kill = self.dataStore.organisms[index]
+            self.kill(to_kill)
             # Increment amount killed
             killed += 1
 
-    def kill(self, index: int):
+    def kill(self, organism: Organism):
         """ Kill the organism at the given index """
-        org_len = len(self.dataStore.organisms)
-        # Retrieve the organism that should be killed
-        to_kill = self.dataStore.organisms[index]
         # Actually kill the organism
-        self.dataStore.death_organisms.append(to_kill)
-        # Last organism in list is moved to the index location of the organism
-        # to kill. This allows us to remove the last element of the list
-        # resulting in a kill of `O(2)`. Any other approach (pop on index,
-        # setting to `None` and removing later) will result in worse times.
-        self.dataStore.organisms[index] = self.dataStore.organisms[org_len - 1]
-        self.dataStore.organisms.pop()
+        self.dataStore.kill_organism(organism)
         # Make sure extensions know the organism is dead
-        self._notify_extensions_of_death(to_kill)
+        self._notify_extensions_of_death(organism)
 
     def simulate(self):
         """ Simulate a day in the current ecosystem.
@@ -133,8 +125,6 @@ class Simulation(object):
 
         # First: Put Females into Menopause
         for org in self.dataStore.organisms:
-            if org is None:
-                continue
             if org.sex.name == "female" and org.fertile:
                 if org.should_enter_menopause():
                     org.fertile = False
@@ -142,8 +132,6 @@ class Simulation(object):
         # Second: Check for 1 sexually mature Male
         smm_flag: bool = False
         for org in self.dataStore.organisms:
-            if org is None:
-                continue
             if org.sex.name == "male" and org.age >= org.organismInfo.maturity:
                 smm_flag = True
         if not smm_flag:
@@ -151,8 +139,6 @@ class Simulation(object):
 
         # Third: Impregnate all sexually mature Females
         for org in self.dataStore.organisms:
-            if org is None:
-                continue
             if org.sex.name == "female" and org.breedingTerm == -1 and \
                     org.organismInfo.maturity <= org.age and org.fertile:
                 # Female gets impregnated
@@ -197,7 +183,7 @@ class Simulation(object):
                     babies.append(new_baby)
 
         for baby in babies:
-            self.dataStore.organisms.append(baby)
+            self.dataStore.add_organism(baby)
         return log
 
     def _notify_extensions_of_death(self, organism: Organism):
@@ -206,33 +192,27 @@ class Simulation(object):
 
     def _mortality(self):
         log = []
-        updated_organisms = []
+        to_kill = []
         for org in self.dataStore.organisms:
-            if org is None:
-                continue
             if org.should_die_naturally():
                 log.append(f"{org.name} {org.id} died at age {org.age}.")
                 self._logger.log(str(org.id) + " Rats died.")
-                self.dataStore.death_organisms.append(org)
-                self._notify_extensions_of_death(org)
+                to_kill.append(org)
+                continue
             else:
                 # Let extensions also decide death per organism
                 if next((extension.should_die(org, self.dataStore, log)
                          for extension in self.mortality_extensions), False):
-                    self.dataStore.death_organisms.append(org)
-                    self._notify_extensions_of_death(org)
+                    to_kill.append(org)
                     continue
 
-                updated_organisms.append(org)
-
-        self.dataStore.organisms = updated_organisms
+        for org in to_kill:
+            self.kill(org)
         return log
 
     def _nextday(self):
         self._sim_day += 1
         for org in self.dataStore.organisms:
-            if org is None:
-                continue
             org.age += 1
 
         for cluster in self.dataStore.vegetation:
