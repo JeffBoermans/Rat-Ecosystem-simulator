@@ -73,15 +73,20 @@ class Simulation(object):
     def day(self):
         return self._sim_day
 
-    def kill(self, amount: int):
+    def kill_amount(self, amount: int):
         """ Kill given amount of randomly chosen organisms
         """
         if amount < 0:
             # Protect against negative amounts
             return
-        if self.organism_alive_count() == 0:
+        still_alive = self.organism_alive_count()
+        if still_alive == 0:
             # All organisms are already dead
             return
+        if still_alive < amount:
+            # Avoid getting stuck in an endless loop of trying to kill
+            # more organisms then there are actually alive
+            amount = still_alive
 
         self._logger.log(f"Manually killed {amount} organisms")
         killed = 0
@@ -90,18 +95,25 @@ class Simulation(object):
             # This is done in a while loop with an increment at the end
             # to make sure the right amount of organisms are killed
             index = random.randrange(self.organism_alive_count())
-            organism = self.dataStore.organisms[index]
-            if organism is None:
-                # Continue here because this is not a valid organism
-                # We do not want to increment the counter
-                continue
-            # Organism is moved to the death list. Location in alive
-            # list is set to None to avoid a lot of calculations.
-            # The alive list can be cleaned in a later step.
-            self.dataStore.death_organisms.append(organism)
-            self.dataStore.organisms[index] = None
+            self.kill(index)
             # Increment amount killed
             killed += 1
+
+    def kill(self, index: int):
+        """ Kill the organism at the given index """
+        org_len = len(self.dataStore.organisms)
+        # Retrieve the organism that should be killed
+        to_kill = self.dataStore.organisms[index]
+        # Actually kill the organism
+        self.dataStore.death_organisms.append(to_kill)
+        # Last organism in list is moved to the index location of the organism
+        # to kill. This allows us to remove the last element of the list
+        # resulting in a kill of `O(2)`. Any other approach (pop on index,
+        # setting to `None` and removing later) will result in worse times.
+        self.dataStore.organisms[index] = self.dataStore.organisms[org_len - 1]
+        self.dataStore.organisms.pop()
+        # Make sure extensions know the organism is dead
+        self._notify_extensions_of_death(to_kill)
 
     def simulate(self):
         """ Simulate a day in the current ecosystem.
@@ -118,7 +130,6 @@ class Simulation(object):
         current_day: int = self.day()
         for cluster in self.dataStore.vegetation:
             cluster.repopulate(current_day)
-
 
         # First: Put Females into Menopause
         for org in self.dataStore.organisms:
@@ -226,7 +237,6 @@ class Simulation(object):
 
         for cluster in self.dataStore.vegetation:
             cluster.next_day()
-
 
         for extension in self.mortality_extensions:
             extension.next_day(self.dataStore)
