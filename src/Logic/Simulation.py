@@ -64,11 +64,11 @@ class Simulation(object):
         """ Get amount of organisms currently alive in simulation
         """
         return len(self.dataStore.organisms)
-    
+
     def male_female_ratio(self):
         """ Get the amount of males/females currently alive in the simulation
         """
-        return len(self.dataStore.female_organisms), len(self.dataStore.male_organisms)
+        return len(self.dataStore.male_organisms), len(self.dataStore.female_organisms)
 
     def organism_dead_count(self):
         """ Get amount of organisms that have passed away in the simulation
@@ -129,26 +129,46 @@ class Simulation(object):
             cluster.repopulate(current_day)
 
         # First: Put Females into Menopause
-        for org in self.dataStore.organisms:
-            if org.sex.name == "female" and org.fertile:
-                if org.should_enter_menopause():
-                    org.fertile = False
+        for org in self.dataStore.female_organisms:
+            if org.fertile and org.should_enter_menopause():
+                org.fertile = False
 
-        # Second: Check for 1 sexually mature Male
-        smm_flag: bool = False
-        for org in self.dataStore.organisms:
-            if org.sex.name == "male" and org.age >= org.organismInfo.maturity:
-                smm_flag = True
-        if not smm_flag:
+        if not self.dataStore.female_organisms:
+            # Don't bother when there are no females alive
             return
-
-        # Third: Impregnate all sexually mature Females
-        for org in self.dataStore.organisms:
-            if org.sex.name == "female" and org.breedingTerm == -1 and \
-                    org.organismInfo.maturity <= org.age and org.fertile:
-                # Female gets impregnated
-                org.breedingTerm = org.age
-                self._logger.log("Female impregnated")
+        for male in self.dataStore.male_organisms:
+            if male.age < male.organismInfo.maturity:
+                continue
+            missed = 0
+            mated = 0
+            mate_count = random.randrange(7)
+            while mated < mate_count and missed < 7:
+                mate_index = random.randrange(
+                    len(self.dataStore.female_organisms))
+                mate = self.dataStore.female_organisms[mate_index]
+                if mate.breedingTerm == -1 and mate.organismInfo.maturity <= mate.age \
+                        and mate.fertile:
+                    mate.breedingTerm = mate.age
+                    self._logger.log("Female impregnated")
+                    mated += 1
+                else:
+                    missed += 1
+        #
+        # # Second: Check for 1 sexually mature Male
+        # smm_flag: bool = False
+        # for org in self.dataStore.organisms:
+        #     if org.sex.name == "male" and org.age >= org.organismInfo.maturity:
+        #         smm_flag = True
+        # if not smm_flag:
+        #     return
+        #
+        # # Third: Impregnate all sexually mature Females
+        # for org in self.dataStore.organisms:
+        #     if org.sex.name == "female" and org.breedingTerm == -1 and \
+        #             org.organismInfo.maturity <= org.age and org.fertile:
+        #         # Female gets impregnated
+        #         org.breedingTerm = org.age
+        #         self._logger.log("Female impregnated")
 
     def _int_to_sex(self, sex_int: int) -> str:
         if sex_int == 0:
