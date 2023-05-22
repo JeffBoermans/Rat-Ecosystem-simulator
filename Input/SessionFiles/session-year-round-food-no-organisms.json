@@ -1,0 +1,77 @@
+{
+    "food-chain-preys": {
+    },
+    "organism-characteristics": {
+    },
+    "vegetation-characteristics": {
+      "Corn": {
+        "energy-yield": 100,
+        "maturity-age-days": [70, 100],
+        "foraging-difficulty-factor": 1
+      }
+    },
+    "organisms": [
+    ],
+    "vegetation": [
+      {
+        "name":"Corn",
+        "age":0,
+        "amount":100
+      },
+      {
+        "name":"Corn",
+        "age":30,
+        "amount":100
+      },
+      {
+        "name":"Corn",
+        "age":60,
+        "amount":100
+      },
+      {
+        "name":"Corn",
+        "age":90,
+        "amount":100
+      },
+      {
+        "name":"Corn",
+        "age":120,
+        "amount":100
+      },
+      {
+        "name":"Corn",
+        "age":150,
+        "amount":100
+      },
+      {
+        "name":"Corn",
+        "age":180,
+        "amount":100
+      },
+      {
+        "name":"Corn",
+        "age":210,
+        "amount":100
+      },
+      {
+        "name":"Corn",
+        "age":240,
+        "amount":100
+      },
+      {
+        "name":"Corn",
+        "age":270,
+        "amount":100
+      },
+      {
+        "name":"Corn",
+        "age":300,
+        "amount":100
+      },
+      {
+        "name":"Corn",
+        "age":330,
+        "amount":100
+      }
+    ]
+  }
