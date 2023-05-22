@@ -13,6 +13,8 @@ from ..exceptions import MissingOrganismProperty, MissingVegetationProperty
 class ForagingExtension(SimulationMortalityExtension):
     def __init__(self, extension_name: str='foraging') -> None:
         super().__init__(extension_name)
+
+        # cluster: MonoVegetationCluster, energy_level: int , time_at_cluster: int
         self.organism_foraging_info: Dict[Organism, Tuple[MonoVegetationCluster, int, int]] = dict()
         self.cluster_organism_populations: Dict[MonoVegetationCluster, int] = dict()
 
