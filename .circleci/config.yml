@@ -65,6 +65,7 @@ jobs:
       # Push resulting executable back to repo
       - run: git config user.email "jeffboermans1@gmail.com"
       - run: git config user.name "Jeff Boermans"
+      - run: git config push.autoSetupRemote true
       - run: git add build/simulation-linux
       - run: git add build/simulation-windows.exe
       - run: git commit -m "[skip ci] Rebuild executables."
