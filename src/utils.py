@@ -15,9 +15,9 @@ def centered_normal_dist(range: Tuple[int, int], std_factor: float=4.0) -> Norma
     :param std_factor: The inverse scaling factor on the the range width to produce the std
     :return: The centered normal distribution
     """
-    range_dist: int = range[1] - range[0]
-    range_std: int = range_dist / std_factor
-    mean: int = range[0] + range_std
+    range_half_width: int = (range[1] - range[0]) / 2.0
+    range_std: int = range_half_width / std_factor
+    mean: int = range[0] + range_half_width
     return NormalDist(mu=mean, sigma=range_std)
 
 
