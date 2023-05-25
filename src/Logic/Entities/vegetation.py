@@ -140,7 +140,7 @@ class AnnualVegetationCluster(MonoVegetationCluster):
 
     def repopulate(self, day: int) -> None:
         if (self.age % 365) == 0:
-            self.immature_amount = self.mature_amount
+            self.immature_amount += self.mature_amount
             # self.immature_amount = self._reproduction_amount()
             self.mature_amount = 0
             self.age = 0
