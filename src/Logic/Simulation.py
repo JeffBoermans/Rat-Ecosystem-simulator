@@ -112,6 +112,9 @@ class Simulation(object):
         # Make sure extensions know the organism is dead
         self._notify_extensions_of_death(organism)
 
+    def kill_cluster(self, index: int):
+        self.dataStore.vegetation[index].reset_energy()
+
     def simulate(self):
         """ Simulate a day in the current ecosystem.
         """
