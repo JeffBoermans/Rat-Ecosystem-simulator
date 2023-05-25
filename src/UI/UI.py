@@ -76,6 +76,7 @@ class UI():
     def _setup_data_window(self):
         window_id = "sim_data_window"
         with self._dpg.window(label="Data box", id=window_id, width=500, height=350, no_close=True):
+            self._dpg.add_text("Carry capacity estimate: ", tag="cc_estimate")
             self._dpg.add_text(
                 f"Day: {self.simulation.day()}", tag="updatectr")
             self._dpg.add_text("Number of rats in existence: ", tag="r_alive")
@@ -284,6 +285,7 @@ class UI():
         else:
             self.data_y[cur_sim_day] = alive
         males, females = self.simulation.male_female_ratio()
+        self._dpg.set_value("cc_estimate", f"Carry capacity estimate: {self.get_last_carry_capacity_estimate()}")
         self._dpg.set_value("r_alive", f"Number of rats alive: {alive} (M: {males} / F: {females})")
         self._dpg.set_value("r_dead", f"Number of rats died: {dead}")
 
@@ -308,6 +310,20 @@ class UI():
 
         for log in logs:
             self.logger.log(log)
+
+    def get_last_carry_capacity_estimate(self):
+        if not self._is_carry_capacity_estimation_active():
+            return 0.0
+        if len(self.data_y_carry_capacity) == 0:
+            return 0.0
+
+        carry_cap_est_method: str = self._dpg.get_value(self.tag_options_carry_capacity)
+        if carry_cap_est_method == self.dropdown_carry_cap_est_curve_fit:
+            return self.data_y_carry_capacity[-1]
+        elif carry_cap_est_method == self.dropdown_carry_cap_est_simple_avg:
+            return self.data_y_carry_capacity[int(len(self.data_y_carry_capacity) / 2 - 0.5)]
+
+        return 0.0
 
     def _update_carry_capacity_estimate(self):
         """Update the list containing the running carry capacity estimate of the
