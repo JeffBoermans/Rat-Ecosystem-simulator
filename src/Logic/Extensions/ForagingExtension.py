@@ -36,7 +36,7 @@ class ForagingExtension(SimulationMortalityExtension):
         for organism in datastore.organisms:
             # Add organism to cluster
             if organism not in self.organism_foraging_info:
-                cluster = random.choice(datastore.vegetation)
+                cluster = self._IFD(organism, datastore)
                 energy = organism.organismInfo.get_extension_property(self.PROP_ORG_DAILY_ENERGY_CONSUMPTION)
                 time_at_cluster = 0
                 self.organism_foraging_info[organism] = (cluster, energy, 0)
