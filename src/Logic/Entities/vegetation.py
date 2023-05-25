@@ -61,6 +61,9 @@ class MonoVegetationCluster(Vegetation):
         assert amount >= 0, f"Cannot add negative amount of energy to cluster: {amount}"
         self._energy_amount += amount
 
+    def reset_energy(self) -> None:
+        self._energy_amount = 0
+
     def forage_energy(self, amount) -> int:
         """Forage at most the specified amount of energy from the vegetation cluster.
         
@@ -127,6 +130,13 @@ class AnnualVegetationCluster(MonoVegetationCluster):
         self.mature_amount += matured_count
         self.add_energy(matured_count * self._crop_energy_yield)
         self.immature_amount -= matured_count
+    
+    def kill_cluster(self) -> None:
+        """Kill the cluster. This resets its energy levels to 0
+        """
+        self.reset_energy()
+        self.mature_amount = self.mature_amount + self.immature_amount
+        self.immature_amount = 0
 
     def repopulate(self, day: int) -> None:
         if (self.age % 365) == 0:

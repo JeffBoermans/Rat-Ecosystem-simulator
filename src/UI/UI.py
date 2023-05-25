@@ -83,6 +83,8 @@ class UI():
         return window_id
 
     def _setup_control_window(self):
+        nr_clusters: int = len(self.simulation.dataStore.vegetation) - 1
+        # print(nr_clusters)
         window_id = "sim_control_window"
         nice_height = self._dpg.get_viewport_height(
         ) - self._dpg.get_item_height("sim_population_graph")
@@ -110,7 +112,9 @@ class UI():
                 self._dpg.add_button(label="KILL", callback=self.purge)
             self._dpg.add_text("=============================")
             with self._dpg.group(horizontal=True):
-                self._dpg.add_button(label="Insert Fire")
+                self._dpg.add_input_int(
+                    label="", min_value=0, min_clamped=True, max_clamped=True, default_value=0, max_value=nr_clusters,tag="min_cl", width=100)
+                self._dpg.add_button(label="Kill Cluster", callback=self.cluster_purge)
             self._dpg.add_text("=============================")
         return window_id
 
@@ -230,6 +234,10 @@ class UI():
 
     def start(self):
         self.paused = False
+    
+    def cluster_purge(self):
+        index = self._dpg.get_value("min_cl")
+        self.simulation.kill_cluster(index)
 
     def purge(self):
         min_val: int = self._dpg.get_value("min_val")
