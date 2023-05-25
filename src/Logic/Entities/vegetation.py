@@ -3,6 +3,7 @@ from statistics import NormalDist
 from numpy import random as np_random
 
 from src.Logic.Entities.entity import Entity
+from src.Logic.exceptions import MissingVegetationProperty
 from ...utils import centered_normal_dist
 
 
@@ -38,12 +39,19 @@ class MonoVegetationCluster(Vegetation):
         :param maturity_age_range: The age range in days between which the vegetation normally reaches maturation
         """
         super(MonoVegetationCluster, self).__init__(species, age, id, **kwargs)
+
+        reproduction_amount = self.get_extension_property("reproduction-amount")
+        if reproduction_amount is None:
+            raise MissingVegetationProperty("Missing required 'reproduction-amount' vegetation property")
+
         self._crop_energy_yield: int = energy_yield
         """The fixed energy yield for a single crop once it reaches maturity"""
         self._energy_amount: int = 0
         """The amount of energy that is currently available in this cluster to any organisms"""
         self._maturity_dist: NormalDist = centered_normal_dist(maturity_age_range, 4.0)
         """The age range in days when the plant typically reaches maturity"""
+        self._reproduction_dist: NormalDist = centered_normal_dist(reproduction_amount, 4.0)
+        """The range of new plants a plant typically produces each reproduction cycle"""
 
     @property
     def energy_amount(self):
@@ -123,6 +131,7 @@ class AnnualVegetationCluster(MonoVegetationCluster):
     def repopulate(self, day: int) -> None:
         if (self.age % 365) == 0:
             self.immature_amount = self.mature_amount
+            # self.immature_amount = self._reproduction_amount()
             self.mature_amount = 0
             self.age = 0
 
@@ -137,14 +146,27 @@ class AnnualVegetationCluster(MonoVegetationCluster):
 
         :return: The number of plants that should mature
         """
+        if self.immature_amount <= 0:
+            return 0
+
         # The probability of an individual having reached maturity before its current age
         prob_of_mature_before_age = self._maturity_dist.cdf(self.age)
-        
+
         # A binomial distribution maps the number of successes for n disconnected
         # trials to the probability of those n successes
         # ==> Choose a sample from an inverse binomial distribution based on the
         #   current age of the cluster vegetation and the maturity normal distribution
         return np_random.binomial(n=self.immature_amount, p=prob_of_mature_before_age)
+
+    def _reproduction_amount(self) -> int:
+        """Stochastically choose a number x immature plants in the current cluster that should successfully reproduce.
+
+        Because a cluster implicitly represents a number of plants, output a number of
+        plants that should successfully reproduce instead of a list of plants that should reproduce.
+
+        :return: The number of plants that reproduce successfully
+        """
+        return max(0, int(self._reproduction_dist.samples(1)[0] * self.mature_amount))
 
     def __repr__(self) -> str:
         return f"{self.mature_amount} Mature | {self.immature_amount} Immature | " + super().__repr__()
