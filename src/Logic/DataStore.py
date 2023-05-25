@@ -98,6 +98,12 @@ class DataStore(object):
 
         self.org_map.pop(organism)
 
+        # Do organism internals cleanup
+        if organism.sex == OrganismSexesEnum.female:
+            for child in organism.children:
+                child.mother = None
+        organism.mother = None
+
     def printOrganisms(self):
         for org in self.organisms:
             print(str(org.id) + "; age: " + str(org.age) +

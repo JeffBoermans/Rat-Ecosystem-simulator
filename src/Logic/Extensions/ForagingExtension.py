@@ -35,15 +35,16 @@ class ForagingExtension(SimulationMortalityExtension):
 
         for organism in datastore.organisms:
             # Add organism to cluster
+            # Catches initial organisms not registered via
+            # _notify_organism_birth, e.g. the seed/initial
+            # population of simulation organisms
             if organism not in self.organism_foraging_info:
-                cluster = self._IFD(organism, datastore)
-                energy = organism.organismInfo.get_extension_property(self.PROP_ORG_DAILY_ENERGY_CONSUMPTION)
-                time_at_cluster = 0
-                self.organism_foraging_info[organism] = (cluster, energy, 0)
-                self._incr_cluster_organism_count(cluster)
-            # Organism is on cluster, get its foraging info
-            else:
-                cluster, energy, time_at_cluster = self.organism_foraging_info[organism]
+                self.notify_organism_birth(organism, datastore)
+
+            cluster, energy, time_at_cluster = self.organism_foraging_info[organism]
+
+            # if self._try_weaning(organism, datastore):
+            #     continue
 
             daily_consumption: int | None = organism.organismInfo.get_extension_property(self.PROP_ORG_DAILY_ENERGY_CONSUMPTION)
             forage_amount: int | None = organism.organismInfo.get_extension_property(self.PROP_ORG_ENERGY_FORAGING_AMOUNT)
@@ -82,6 +83,15 @@ class ForagingExtension(SimulationMortalityExtension):
             cluster = foraging_info[0]
             self._decr_cluster_organism_count(cluster)
 
+    def notify_organism_birth(self, organism: Organism, datastore: DataStore) -> None:
+        if organism in self.organism_foraging_info:
+            raise RuntimeError(f"The {self.__class__.__name__} extension was notified more than once of the birth of {organism}")
+
+        cluster = self._IFD(organism, datastore)
+        energy = 0 # organism.organismInfo.get_extension_property(self.PROP_ORG_DAILY_ENERGY_CONSUMPTION)
+        self.organism_foraging_info[organism] = (cluster, energy, 0)
+        self._incr_cluster_organism_count(cluster)
+
     def should_die(self, organism: Entity, datastore: DataStore, log: List[str]) -> bool:
         if not isinstance(organism, Organism):
             return False
@@ -96,6 +106,49 @@ class ForagingExtension(SimulationMortalityExtension):
             log.append(f"{organism.name} {organism.id} starved to death (Age: {organism.age})")
 
         return should_die
+
+    def _try_weaning(self, child: Organism, datastore: DataStore) -> bool:
+        """A baby mammal organism weans as an alternative to normal foraging behavior.
+
+        A suckling organism will always move to the cluster of the mother of the mother
+        after this action completes successfully.
+
+        The child drains the energy it would normally forage from the mother's energy
+        reserves.
+
+        :return: Whether the organism is in the valid state to perform suckling behavior,
+        if False the normal foraging bevavior should manually be performed
+        """
+        if child.mother is None:
+            return False
+
+        if child.age > 10:
+            return False
+
+        daily_consumption: int | None = child.organismInfo.get_extension_property(self.PROP_ORG_DAILY_ENERGY_CONSUMPTION) / 6.0
+        forage_amount: int | None = child.organismInfo.get_extension_property(self.PROP_ORG_ENERGY_FORAGING_AMOUNT) / 6.0
+        energy_stockpile_days: int | None = child.organismInfo.get_extension_property(self.PROP_ORG_DAYS_ENERGY_STOCKPILE_MAX)
+
+        child_cluster, child_energy, child_time_at_cluster = self.organism_foraging_info[child]
+
+        satiation_hardcap: int = energy_stockpile_days * daily_consumption
+        room_in_stomach: int = satiation_hardcap - child_energy # The amount of energy the organism can still stockpile
+        to_suckle_energy: int = daily_consumption + min(forage_amount, room_in_stomach)
+        mother_cluster, mother_energy, mother_time_at_cluster = self.organism_foraging_info[child.mother]
+
+        remaining_mother_energy: int = max(0, mother_energy - to_suckle_energy)
+        suckled_energy = mother_energy - remaining_mother_energy
+
+        new_info = (mother_cluster, child_energy + suckled_energy, child_time_at_cluster)
+        self.organism_foraging_info[child] = new_info
+        new_info = (mother_cluster, remaining_mother_energy, mother_time_at_cluster)
+        self.organism_foraging_info[child.mother] = new_info
+
+        if child_cluster is not None:
+            self._decr_cluster_organism_count(child_cluster)
+        self._incr_cluster_organism_count(mother_cluster)
+
+        return suckled_energy > 0
 
     def _try_changing_cluster(self, organism: Organism, datastore: DataStore) -> Union[MonoVegetationCluster, None]:
         """Suggest a new cluster to change to based on current foraging information.

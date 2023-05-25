@@ -22,8 +22,14 @@ class SimulationExtension(object):
         
         Used for bookkeeping within the extension.
         """
-        raise NotImplementedError(f"Missing required (pure virtual) method of the extension interface: {self.next_day.__name__}")
+        raise NotImplementedError(f"Missing required (pure virtual) method of the extension interface: {self.notify_organism_death.__name__}")
 
+    def notify_organism_birth(self, organism: Organism, datastore: DataStore) -> None:
+        """Notfiy the extension of the birth of an organism.
+        
+        Used for bookkeeping within the extension.
+        """
+        raise NotImplementedError(f"Missing required (pure virtual) method of the extension interface: {self.notify_organism_birth.__name__}")
 
 
 class SimulationMortalityExtension(SimulationExtension):

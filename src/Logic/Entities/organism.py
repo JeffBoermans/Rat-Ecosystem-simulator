@@ -2,7 +2,7 @@ import random
 
 from statistics import NormalDist
 from enum import Enum
-from typing import List
+from typing import List, Union
 
 from .entity import Entity
 from .organism_info import OrganismInfo
@@ -28,7 +28,7 @@ class OrganismSexesEnum(Enum):
 
 class Organism(Entity):
     """A living creature"""
-    def __init__(self, e_name: str, e_age: int, e_id: int, e_sex: OrganismSexesEnum, e_info: OrganismInfo):
+    def __init__(self, e_name: str, e_age: int, e_id: int, e_sex: OrganismSexesEnum, e_info: OrganismInfo, mother=None):
         """
         :param e_name: The name of the organism's species
         :param e_age: The age of the organism, in Simulation timesteps
@@ -43,6 +43,8 @@ class Organism(Entity):
         self.organismInfo: OrganismInfo = e_info
         self.breedingTerm = -1
         self.fertile = True
+        self.mother: Union[Organism, None] = mother
+        self.children: List[Organism] = []
 
         self.natural_mortality_dist: NormalDist = centered_normal_dist(self.organismInfo.lifespan, 4.0)
         self.menopause_dist: NormalDist = centered_normal_dist(self.organismInfo.menopause, 4.0)

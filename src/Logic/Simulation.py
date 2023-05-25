@@ -187,7 +187,6 @@ class Simulation(object):
         if len(self.dataStore.organisms) == 0:
             # Catch for when all rats have died
             return []
-        last_id: int = self.dataStore.organisms[-1].id
         for org in self.dataStore.organisms:
             if org is None:
                 continue
@@ -200,23 +199,28 @@ class Simulation(object):
                     # Birth occurs
                     self._logger.log("A rat was born")
                     org.breedingTerm = -1
-                    last_id += 1
-                    sex_int: int = random.randint(0, 1)  # 0:male, 1:female
-                    sex: str = self._int_to_sex(sex_int)
-                    sex_enum: OrganismSexesEnum = OrganismSexesEnum(sex)
+                    reserved_id = self.dataStore.reserve_organism_id()
+                    sex_enum: OrganismSexesEnum = random.choice([OrganismSexesEnum.male, OrganismSexesEnum.female])
 
                     new_baby = Organism(
-                        org.name, 0, last_id, sex_enum, org.organismInfo)
+                        org.name, 0, reserved_id, sex_enum, org.organismInfo, mother=org)
+                    org.children.append(new_baby)
+
                     log.append(f"{new_baby.name} {new_baby.id} is born.")
                     babies.append(new_baby)
 
         for baby in babies:
             self.dataStore.add_organism(baby)
+            self._notify_extensions_of_birth(baby)
         return log
 
     def _notify_extensions_of_death(self, organism: Organism):
         for extension in self.mortality_extensions:
             extension.notify_organism_death(organism)
+
+    def _notify_extensions_of_birth(self, organism: Organism):
+        for extension in self.mortality_extensions:
+            extension.notify_organism_birth(organism, self.dataStore)
 
     def _mortality(self):
         log = []
