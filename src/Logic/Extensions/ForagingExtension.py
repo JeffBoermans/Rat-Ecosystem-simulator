@@ -149,15 +149,18 @@ class ForagingExtension(SimulationMortalityExtension):
         :return: The new (possibly the same as currently) clust for the organism
         to move to
         """
-        organism_daily_consumption: int = organism.organismInfo.get_extension_property(self.PROP_ORG_DAILY_ENERGY_CONSUMPTION)
-        clusters_by_quality = [
-            (cluster, cluster.energy_amount - organism_daily_consumption * cluster.population()[1])
-            for cluster in datastore.vegetation
-        ]
 
-        best_cluster_by_quality = max(clusters_by_quality, key=lambda x: x[1])
+        best_cluster_by_quality = max(datastore.vegetation, key=self._compute_cluster_quality)
 
-        return best_cluster_by_quality[0]
+        return best_cluster_by_quality
+
+    def _compute_cluster_quality(self, cluster: MonoVegetationCluster):
+        """Compute the absolute quality of the vegetation cluster for use in IFD.
+
+        :param cluster: The cluster to determine the quality of
+        :return: The quality score
+        """
+        return cluster.energy_amount / cluster.population()[1]
 
     def _MVT(self, organism: Organism, datastore: DataStore) -> bool:
         return self.organism_foraging_info[organism][2] >=  5
