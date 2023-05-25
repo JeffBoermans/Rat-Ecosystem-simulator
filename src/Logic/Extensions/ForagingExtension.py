@@ -160,7 +160,10 @@ class ForagingExtension(SimulationMortalityExtension):
         :param cluster: The cluster to determine the quality of
         :return: The quality score
         """
-        return cluster.energy_amount / cluster.population()[1]
+        cluster_organism_population: int = cluster.population()[1]
+        if cluster_organism_population == 0:
+            return 0
+        return cluster.energy_amount / cluster_organism_population
 
     def _MVT(self, organism: Organism, datastore: DataStore) -> bool:
         return self.organism_foraging_info[organism][2] >=  5
